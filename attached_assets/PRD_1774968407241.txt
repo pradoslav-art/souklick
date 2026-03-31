@@ -1,0 +1,238 @@
+# Souklick - Product Requirements Document
+
+## What It Is
+Souklick is a review management platform that aggregates Google, Zomato, and TripAdvisor reviews into one dashboard and uses AI to draft personalized, on-brand responses for UAE-based multi-location businesses. It replaces the Sunday-night scramble of copy-pasting generic replies with a streamlined workflow where managers approve AI-drafted responses in seconds. The product prioritizes negative reviews automatically and tracks response impact on ratings over time.
+
+## Target User
+Fatima is a Regional Operations Manager for "Saffron Kitchen," a growing Emirati restaurant group with 12 locations across Dubai and Abu Dhabi. Every Sunday evening from 8-11pm, she opens four browser tabs (Google My Business, Zomato, TripAdvisor, and a shared Google Sheet) and manually scrolls through each location's reviews from the past week. She copy-pastes "Thank you for dining with us! We appreciate your feedback and hope to see you again soon" because writing 47 unique responses would take hours she doesn't have. Last month, a 2-star review about a cold shawarma at Marina Mall sat unanswered for 9 days because her assistant manager thought she'd handled it—that location's Google rating dropped from 4.4 to 4.2. She knows her generic responses look robotic (one angry reviewer even replied "Nice bot response"), but the alternative is hiring someone full-time just to write reviews. She's tried Hootsuite and Sprout Social, but they're built for social media, not review platforms, and they don't understand that a response to a complaint about slow service needs to be completely different from a response about portion sizes.
+
+## Core Problem
+Reviews across Google, Zomato, and TripAdvisor go unanswered for days because monitoring multiple platforms manually is exhausting, and writing thoughtful personalized responses at scale is impossible without dedicated staff.
+
+## Unique Value Proposition
+Unlike generic social media tools, Souklick is built specifically for review response—it learns your brand voice from your best existing responses, prioritizes negative reviews that could tank your rating, and shows you exactly how your response strategy impacts your star ratings over time. The Competitor Response Intelligence Tracker lets you see how rival restaurants in your area handle similar complaints, so you can outclass them in the review section where customers actually compare you.
+
+---
+
+## MVP Features (Build These First)
+
+### Unified Review Dashboard
+**What the user does:** Logs in and sees all reviews from all connected platforms (Google, Zomato, TripAdvisor) for all their locations in one scrollable feed. Can filter by platform, location, star rating, or response status (responded/pending). Can click any review to expand it.
+**What the system does:** Pulls reviews from connected platform APIs every 15 minutes, normalizes them into a unified format (reviewer name, rating, text, platform, location, timestamp), stores them in the database, and displays them sorted by newest first with visual badges for platform and star rating.
+**It works when:** User connects at least one Google Business Profile, and within 60 seconds sees their last 30 days of reviews displayed with correct star ratings, dates, and platform icons.
+
+### Real-Time Review Alerts
+**What the user does:** Sets up notification preferences: which star ratings trigger alerts (default: 1-3 stars), which locations to monitor, and delivery method (email and/or in-app push notification).
+**What the system does:** When a new review is pulled that matches alert criteria, immediately sends a notification with review preview (first 100 characters), star rating, platform, location name, and a direct link to respond in Souklick. In-app shows as a badge count and notification bell dropdown.
+**It works when:** User receives an email within 5 minutes of a 2-star review being posted to their Google Business Profile, and clicking the email link takes them directly to that review in Souklick.
+
+### AI Response Draft Generator
+**What the user does:** Clicks "Generate Response" button on any review. Can optionally add a note like "Mention we've retrained staff on portion sizes" before generating.
+**What the system does:** Sends the review text, star rating, any user notes, and the brand's saved voice settings to Claude API. Receives a draft response (150-250 words for negative reviews, 50-100 for positive). Displays the draft in an editable text field below the review. Shows a "Regenerate" button to get alternative versions.
+**It works when:** User clicks Generate on a 3-star review mentioning slow service, and within 5 seconds sees a draft that specifically addresses wait times, sounds warm and apologetic (not corporate), and includes a soft recovery offer.
+
+### One-Click Approval Workflow
+**What the user does:** Reads the AI draft, optionally edits it, then clicks "Approve & Post." Alternatively, clicks "Save Draft" to return later, or "Reject" to discard and write manually.
+**What the system does:** On approval, posts the response to the original platform via API, updates the review status to "Responded," logs the response text and timestamp, and shows a success animation. If API posting fails, shows error and keeps draft saved.
+**It works when:** User approves a response for a Google review, and within 30 seconds the response appears on the actual Google Business Profile listing (verifiable by opening Google in new tab).
+
+### Multi-Location Management Hub
+**What the user does:** Navigates to "Locations" tab to see all their business locations as cards. Can click into any location to see only that location's reviews. Can add new locations by connecting additional Google/Zomato/TripAdvisor profiles.
+**What the system does:** Stores each location with name, address, and connected platform credentials. Filters all dashboard views by selected location(s). Aggregates stats (average rating, response rate, review volume) per location.
+**It works when:** User with 3 locations clicks on "Marina Mall" location card and sees only reviews from that specific location's Google/Zomato/TripAdvisor profiles, not reviews from other locations.
+
+### Negative Review Priority Queue
+**What the user does:** Clicks "Priority Queue" in sidebar to see only unresponded 1-3 star reviews, sorted by oldest first (most urgent). Each review shows a "Days Waiting" counter in red.
+**What the system does:** Automatically filters and sorts reviews where rating ≤ 3 stars AND response_status = 'pending', ordered by created_at ascending. Updates the queue in real-time as reviews are responded to. Shows queue count as a badge in sidebar.
+**It works when:** User has 5 unresponded reviews (two 1-star from 3 days ago, three 4-star from today), opens Priority Queue, and sees only the two 1-star reviews with "3 days waiting" badges, listed before any positive reviews.
+
+### Brand Voice Customization
+**What the user does:** Goes to Settings → Brand Voice. Answers guided questions: "How formal is your brand? (casual/professional)" "Do you use emojis? (never/sometimes/often)" "What's your brand name as you'd sign a response?" "Paste 3 examples of responses you loved." Saves settings.
+**What the system does:** Stores brand voice settings as structured data plus raw example text. When generating AI responses, includes these settings in the Claude prompt as style instructions. Shows a preview: "Your responses will sound like this..." with a sample generated response.
+**It works when:** User sets voice to "casual with emojis" and adds examples using "Cheers, The Saffron Team" as sign-off, then generates a response that actually includes emojis and that exact sign-off format.
+
+---
+
+## Pages & Navigation
+
+### Sidebar Navigation (persistent)
+- Souklick logo (links to Dashboard)
+- Dashboard (home icon)
+- Priority Queue (flag icon, shows badge count of pending negative reviews)
+- Locations (building icon)
+- Analytics (chart icon)
+- Settings (gear icon)
+- Profile dropdown (avatar, logout)
+
+### Login/Signup Page
+Shows email/password fields with "Sign up" and "Log in" tabs. Social login with Google optional. After signup, redirects to onboarding flow.
+
+### Onboarding Flow (3 steps)
+1. **Connect Platforms** - Shows Google, Zomato, TripAdvisor cards with "Connect" buttons. OAuth flow for Google, API key input for others. Minimum 1 platform required.
+2. **Add Locations** - Lists locations pulled from connected platforms with checkboxes. User confirms which locations to monitor.
+3. **Set Brand Voice** - The brand voice questionnaire. Can skip and set up later.
+
+### Dashboard
+Shows unified review feed with filters at top (Platform: All/Google/Zomato/TripAdvisor, Location: All/specific, Rating: All/1-5, Status: All/Pending/Responded). Each review card shows: platform icon, location name, reviewer name, star rating (visual stars), review date, review text (truncated to 200 chars with "read more"), and action buttons (Generate Response, Mark as Read). Responded reviews show the response text collapsed with "View Response" toggle.
+
+### Review Detail Modal
+Opens when clicking a review card. Shows full review text, all metadata, and a large text area for response. Has Generate Response button, Regenerate button, Save Draft button, and Approve & Post button. Shows posting status/history at bottom.
+
+### Priority Queue Page
+Same layout as Dashboard but pre-filtered to 1-3 star unresponded reviews, sorted by oldest first. Each card has a red "X days waiting" badge. Shows empty state with celebration illustration when queue is empty: "🎉 All caught up! No negative reviews waiting."
+
+### Locations Page
+Grid of location cards. Each card shows: location name, address, average rating (pulled from platforms), review count last 30 days, response rate percentage, and a "View Reviews" button. "Add Location" button opens a modal to connect additional platform profiles.
+
+### Analytics Page (MVP-lite version)
+Shows 4 key metrics as large cards: Total Reviews (last 30 days), Average Rating (weighted across platforms), Response Rate (% of reviews responded), Avg Response Time (hours). Below, a simple line chart showing rating trend over last 90 days. Note: Full analytics with Response Impact Score is post-MVP.
+
+### Settings Page
+Tabs for: Brand Voice (the questionnaire), Notifications (alert preferences), Team (invite additional users - shows list with name/email/role, invite button), Connected Platforms (manage OAuth connections), Billing (subscription status, plan details, upgrade button).
+
+### Profile Page
+Shows user name, email, profile photo. Edit button opens modal to update. Change password link. Logout button.
+
+---
+
+## Data Model
+
+### users
+- id: uuid, primary key
+- email: string, unique, required
+- password_hash: string, required
+- full_name: string, required
+- avatar_url: string, nullable
+- role: enum ('owner', 'manager', 'staff'), default 'owner'
+- organization_id: uuid, foreign key
+- notification_email: boolean, default true
+- notification_push: boolean, default true
+- notification_min_rating: integer, default 3
+- created_at: timestamp
+- updated_at: timestamp
+
+### organizations
+- id: uuid, primary key
+- name: string, required
+- brand_voice_formality: enum ('casual', 'balanced', 'professional'), default 'balanced'
+- brand_voice_emojis: enum ('never', 'sometimes', 'often'), default 'sometimes'
+- brand_voice_signoff: string, nullable
+- brand_voice_examples: text[], nullable (array of example responses)
+- subscription_plan: enum ('trial', 'starter', 'growth', 'enterprise'), default 'trial'
+- subscription_status: enum ('active', 'past_due', 'cancelled'), default 'active'
+- trial_ends_at: timestamp
+- created_at: timestamp
+- updated_at: timestamp
+
+### locations
+- id: uuid, primary key
+- organization_id: uuid, foreign key
+- name: string, required
+- address: string, nullable
+- google_place_id: string, nullable
+- zomato_restaurant_id: string, nullable
+- tripadvisor_location_id: string, nullable
+- is_active: boolean, default true
+- created_at: timestamp
+- updated_at: timestamp
+
+### platform_connections
+- id: uuid, primary key
+- organization_id: uuid, foreign key
+- platform: enum ('google', 'zomato', 'tripadvisor')
+- access_token: string, encrypted
+- refresh_token: string, encrypted, nullable
+- token_expires_at: timestamp, nullable
+- account_email: string, nullable
+- is_active: boolean, default true
+- last_sync_at: timestamp, nullable
+- created_at: timestamp
+- updated_at: timestamp
+
+### reviews
+- id: uuid, primary key
+- location_id: uuid, foreign key
+- platform: enum ('google', 'zomato', 'tripadvisor')
+- platform_review_id: string, required (unique per platform)
+- reviewer_name: string, required
+- reviewer_profile_url: string, nullable
+- rating: integer, 1-5, required
+- review_text: text, nullable (some reviews are rating-only)
+- review_date: timestamp, required
+- response_status: enum ('pending', 'draft_saved', 'responded', 'skipped'), default 'pending'
+- sentiment_score: decimal, nullable (-1 to 1, calculated by AI)
+- created_at: timestamp
+- updated_at: timestamp
+
+### responses
+- id: uuid, primary key
+- review_id: uuid, foreign key
+- drafted_by: uuid, foreign key to users, nullable (null if AI-generated)
+- draft_text: text, required
+- final_text: text, nullable (what was actually posted)
+- status: enum ('draft', 'approved', 'posted', 'failed'), default 'draft'
+- posted_at: timestamp, nullable
+- post_error_message: string, nullable
+- ai_generated: boolean, default true
+- generation_prompt_notes: text, nullable (user notes passed to AI)
+- created_at: timestamp
+- updated_at: timestamp
+
+### notifications
+- id: uuid, primary key
+- user_id: uuid, foreign key
+- review_id: uuid, foreign key
+- type: enum ('new_negative_review', 'review_response_failed', 'weekly_summary')
+- channel: enum ('email', 'push', 'in_app')
+- is_read: boolean, default false
+- sent_at: timestamp
+- created_at: timestamp
+
+---
+
+## API Endpoints
+
+### Authentication
+- POST /api/auth/register - Create new account and organization
+- POST /api/auth/login - Authenticate, return JWT token
+- POST /api/auth/logout - Invalidate token
+- POST /api/auth/forgot-password - Send password reset email
+- POST /api/auth/reset-password - Reset password with token
+- GET /api/auth/me - Get current user profile
+
+### Organizations
+- GET /api/organization - Get current user's organization details
+- PATCH /api/organization - Update organization settings (name, brand voice)
+- GET /api/organization/brand-voice - Get brand voice settings
+- PUT /api/organization/brand-voice - Update brand voice settings
+
+### Locations
+- GET /api/locations - List all locations for organization
+- POST /api/locations - Add new location
+- GET /api/locations/:id - Get single location with stats
+- PATCH /api/locations/:id - Update location details
+- DELETE /api/locations/:id - Soft delete (deactivate) location
+
+### Platform Connections
+- GET /api/platforms - List connected platforms
+- POST /api/platforms/google/connect - Initiate Google OAuth
+- GET /api/platforms/google/callback - Google OAuth callback
+- POST /api/platforms/zomato/connect - Connect Zomato with API key
+- POST /api/platforms/tripadvisor/connect - Connect TripAdvisor
+- DELETE /api/platforms/:platform - Disconnect platform
+- POST /api/platforms/:platform/sync - Manual sync trigger
+
+### Reviews
+- GET /api/reviews - List reviews with filters (query params: platform, location_id, min_rating, max_rating, status, page, limit)
+- GET /api/reviews/priority - Get priority queue (negative, unresponded, oldest first)
+- GET /api/reviews/:id - Get single review with response history
+- PATCH /api/reviews/:id - Update review status (mark as skipped, etc.)
+- GET /api/reviews/stats - Get aggregate stats (total, avg rating, response rate)
+
+### Responses
+- POST /api/reviews/:id/generate - Generate AI response draft
+- POST /api/reviews/:id/regenerate - Generate alternative AI response
+- POST /api/reviews/:id/response - Save response draft
+- PATCH /api/responses/:id - Update response draft
+- POST /api/responses/:id/approve - Approve and post response to platform
+- DELETE /api/responses

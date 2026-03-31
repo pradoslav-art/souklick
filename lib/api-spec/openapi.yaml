@@ -1,22 +1,37 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Souklick Review Management Platform API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: auth
+    description: Authentication operations
+  - name: organizations
+    description: Organization management
+  - name: locations
+    description: Location management
+  - name: reviews
+    description: Review management
+  - name: responses
+    description: Response management
+  - name: ai
+    description: AI operations
+  - name: analytics
+    description: Analytics and reporting
+  - name: notifications
+    description: Notification preferences
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +39,519 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /auth/me:
+    get:
+      operationId: getCurrentUser
+      tags: [auth]
+      summary: Get current authenticated user
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/register:
+    post:
+      operationId: registerUser
+      tags: [auth]
+      summary: Register a new user and organization
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterRequest"
+      responses:
+        "201":
+          description: User created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/login:
+    post:
+      operationId: loginUser
+      tags: [auth]
+      summary: Login with email and password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/logout:
+    post:
+      operationId: logoutUser
+      tags: [auth]
+      summary: Logout current user
+      responses:
+        "200":
+          description: Logged out
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /organizations/me:
+    get:
+      operationId: getMyOrganization
+      tags: [organizations]
+      summary: Get the current user's organization
+      responses:
+        "200":
+          description: Organization details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Organization"
+
+    patch:
+      operationId: updateOrganization
+      tags: [organizations]
+      summary: Update organization settings including brand voice
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateOrganizationRequest"
+      responses:
+        "200":
+          description: Updated organization
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Organization"
+
+  /locations:
+    get:
+      operationId: getLocations
+      tags: [locations]
+      summary: Get all locations for the organization
+      responses:
+        "200":
+          description: List of locations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LocationWithStats"
+
+    post:
+      operationId: createLocation
+      tags: [locations]
+      summary: Create a new location
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateLocationRequest"
+      responses:
+        "201":
+          description: Created location
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Location"
+
+  /locations/{id}:
+    get:
+      operationId: getLocation
+      tags: [locations]
+      summary: Get a specific location
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Location details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LocationWithStats"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    patch:
+      operationId: updateLocation
+      tags: [locations]
+      summary: Update a location
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateLocationRequest"
+      responses:
+        "200":
+          description: Updated location
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Location"
+
+    delete:
+      operationId: deleteLocation
+      tags: [locations]
+      summary: Delete a location
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /reviews:
+    get:
+      operationId: getReviews
+      tags: [reviews]
+      summary: Get all reviews with optional filters
+      parameters:
+        - name: locationId
+          in: query
+          schema:
+            type: string
+        - name: platform
+          in: query
+          schema:
+            type: string
+            enum: [google, zomato, tripadvisor]
+        - name: rating
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 5
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, draft_saved, responded, skipped]
+        - name: priorityOnly
+          in: query
+          schema:
+            type: boolean
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        "200":
+          description: List of reviews
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReviewsPage"
+
+    post:
+      operationId: createReview
+      tags: [reviews]
+      summary: Create a review (for testing/demo purposes)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateReviewRequest"
+      responses:
+        "201":
+          description: Created review
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Review"
+
+  /reviews/{id}:
+    get:
+      operationId: getReview
+      tags: [reviews]
+      summary: Get a specific review
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Review details with responses
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReviewWithResponses"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    patch:
+      operationId: updateReviewStatus
+      tags: [reviews]
+      summary: Update review status (mark as skipped, etc.)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateReviewStatusRequest"
+      responses:
+        "200":
+          description: Updated review
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Review"
+
+  /reviews/priority-count:
+    get:
+      operationId: getPriorityCount
+      tags: [reviews]
+      summary: Get count of pending negative reviews for badge display
+      responses:
+        "200":
+          description: Priority count
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PriorityCount"
+
+  /responses:
+    post:
+      operationId: createResponse
+      tags: [responses]
+      summary: Save a draft response
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateResponseRequest"
+      responses:
+        "201":
+          description: Created response draft
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response"
+
+  /responses/{id}:
+    patch:
+      operationId: updateResponse
+      tags: [responses]
+      summary: Update a response (edit text, approve, reject)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateResponseRequest"
+      responses:
+        "200":
+          description: Updated response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response"
+
+  /responses/{id}/approve:
+    post:
+      operationId: approveResponse
+      tags: [responses]
+      summary: Approve and post a response
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ApproveResponseRequest"
+      responses:
+        "200":
+          description: Response posted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response"
+
+  /ai/generate-response:
+    post:
+      operationId: generateAiResponse
+      tags: [ai]
+      summary: Generate an AI response draft for a review
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenerateResponseRequest"
+      responses:
+        "200":
+          description: AI-generated response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GeneratedResponse"
+        "500":
+          description: AI generation failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /analytics/summary:
+    get:
+      operationId: getAnalyticsSummary
+      tags: [analytics]
+      summary: Get analytics summary for the organization
+      responses:
+        "200":
+          description: Analytics summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AnalyticsSummary"
+
+  /analytics/rating-trend:
+    get:
+      operationId: getRatingTrend
+      tags: [analytics]
+      summary: Get rating trend over the last 90 days
+      responses:
+        "200":
+          description: Rating trend data
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RatingTrendPoint"
+
+  /analytics/platform-breakdown:
+    get:
+      operationId: getPlatformBreakdown
+      tags: [analytics]
+      summary: Get review counts and average ratings by platform
+      responses:
+        "200":
+          description: Platform breakdown
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PlatformBreakdown"
+
+  /user/notifications:
+    get:
+      operationId: getNotificationPreferences
+      tags: [notifications]
+      summary: Get notification preferences for the current user
+      responses:
+        "200":
+          description: Notification preferences
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotificationPreferences"
+
+    patch:
+      operationId: updateNotificationPreferences
+      tags: [notifications]
+      summary: Update notification preferences
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateNotificationPreferencesRequest"
+      responses:
+        "200":
+          description: Updated preferences
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotificationPreferences"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +562,532 @@ components:
       required:
         - status
 
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+      required:
+        - error
+
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+      required:
+        - success
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+        email:
+          type: string
+        fullName:
+          type: string
+        avatarUrl:
+          type: string
+          nullable: true
+        role:
+          type: string
+          enum: [owner, manager, staff]
+        organizationId:
+          type: string
+        notificationEmail:
+          type: boolean
+        notificationPush:
+          type: boolean
+        notificationMinRating:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - email
+        - fullName
+        - role
+        - organizationId
+        - notificationEmail
+        - notificationPush
+        - notificationMinRating
+        - createdAt
+
+    RegisterRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+        fullName:
+          type: string
+        organizationName:
+          type: string
+      required:
+        - email
+        - password
+        - fullName
+        - organizationName
+
+    LoginRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+      required:
+        - email
+        - password
+
+    AuthResponse:
+      type: object
+      properties:
+        user:
+          $ref: "#/components/schemas/User"
+        organization:
+          $ref: "#/components/schemas/Organization"
+      required:
+        - user
+        - organization
+
+    Organization:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        brandVoiceFormality:
+          type: string
+          enum: [casual, balanced, professional]
+        brandVoiceEmojis:
+          type: string
+          enum: [never, sometimes, often]
+        brandVoiceSignoff:
+          type: string
+          nullable: true
+        brandVoiceExamples:
+          type: array
+          items:
+            type: string
+          nullable: true
+        subscriptionPlan:
+          type: string
+          enum: [trial, starter, growth, enterprise]
+        subscriptionStatus:
+          type: string
+          enum: [active, past_due, cancelled]
+        trialEndsAt:
+          type: string
+          format: date-time
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - name
+        - brandVoiceFormality
+        - brandVoiceEmojis
+        - subscriptionPlan
+        - subscriptionStatus
+        - createdAt
+
+    UpdateOrganizationRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        brandVoiceFormality:
+          type: string
+          enum: [casual, balanced, professional]
+        brandVoiceEmojis:
+          type: string
+          enum: [never, sometimes, often]
+        brandVoiceSignoff:
+          type: string
+          nullable: true
+        brandVoiceExamples:
+          type: array
+          items:
+            type: string
+
+    Location:
+      type: object
+      properties:
+        id:
+          type: string
+        organizationId:
+          type: string
+        name:
+          type: string
+        address:
+          type: string
+          nullable: true
+        googlePlaceId:
+          type: string
+          nullable: true
+        zomatoRestaurantId:
+          type: string
+          nullable: true
+        tripadvisorLocationId:
+          type: string
+          nullable: true
+        isActive:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - organizationId
+        - name
+        - isActive
+        - createdAt
+
+    LocationWithStats:
+      allOf:
+        - $ref: "#/components/schemas/Location"
+        - type: object
+          properties:
+            averageRating:
+              type: number
+              nullable: true
+            reviewCount:
+              type: integer
+            responseRate:
+              type: number
+          required:
+            - reviewCount
+            - responseRate
+
+    CreateLocationRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        address:
+          type: string
+        googlePlaceId:
+          type: string
+        zomatoRestaurantId:
+          type: string
+        tripadvisorLocationId:
+          type: string
+      required:
+        - name
+
+    UpdateLocationRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        address:
+          type: string
+        googlePlaceId:
+          type: string
+        zomatoRestaurantId:
+          type: string
+        tripadvisorLocationId:
+          type: string
+        isActive:
+          type: boolean
+
+    Review:
+      type: object
+      properties:
+        id:
+          type: string
+        locationId:
+          type: string
+        platform:
+          type: string
+          enum: [google, zomato, tripadvisor]
+        platformReviewId:
+          type: string
+        reviewerName:
+          type: string
+        reviewerProfileUrl:
+          type: string
+          nullable: true
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+        reviewText:
+          type: string
+          nullable: true
+        reviewDate:
+          type: string
+          format: date-time
+        responseStatus:
+          type: string
+          enum: [pending, draft_saved, responded, skipped]
+        sentimentScore:
+          type: number
+          nullable: true
+        locationName:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - locationId
+        - platform
+        - platformReviewId
+        - reviewerName
+        - rating
+        - reviewDate
+        - responseStatus
+        - locationName
+        - createdAt
+
+    ReviewWithResponses:
+      allOf:
+        - $ref: "#/components/schemas/Review"
+        - type: object
+          properties:
+            responses:
+              type: array
+              items:
+                $ref: "#/components/schemas/Response"
+          required:
+            - responses
+
+    ReviewsPage:
+      type: object
+      properties:
+        reviews:
+          type: array
+          items:
+            $ref: "#/components/schemas/Review"
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+        totalPages:
+          type: integer
+      required:
+        - reviews
+        - total
+        - page
+        - limit
+        - totalPages
+
+    PriorityCount:
+      type: object
+      properties:
+        count:
+          type: integer
+      required:
+        - count
+
+    CreateReviewRequest:
+      type: object
+      properties:
+        locationId:
+          type: string
+        platform:
+          type: string
+          enum: [google, zomato, tripadvisor]
+        reviewerName:
+          type: string
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+        reviewText:
+          type: string
+        reviewDate:
+          type: string
+          format: date-time
+      required:
+        - locationId
+        - platform
+        - reviewerName
+        - rating
+
+    UpdateReviewStatusRequest:
+      type: object
+      properties:
+        responseStatus:
+          type: string
+          enum: [pending, draft_saved, responded, skipped]
+      required:
+        - responseStatus
+
+    Response:
+      type: object
+      properties:
+        id:
+          type: string
+        reviewId:
+          type: string
+        draftedBy:
+          type: string
+          nullable: true
+        draftText:
+          type: string
+        finalText:
+          type: string
+          nullable: true
+        status:
+          type: string
+          enum: [draft, approved, posted, failed]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - reviewId
+        - draftText
+        - status
+        - createdAt
+        - updatedAt
+
+    CreateResponseRequest:
+      type: object
+      properties:
+        reviewId:
+          type: string
+        draftText:
+          type: string
+      required:
+        - reviewId
+        - draftText
+
+    UpdateResponseRequest:
+      type: object
+      properties:
+        draftText:
+          type: string
+        finalText:
+          type: string
+        status:
+          type: string
+          enum: [draft, approved, posted, failed]
+
+    ApproveResponseRequest:
+      type: object
+      properties:
+        finalText:
+          type: string
+      required:
+        - finalText
+
+    GenerateResponseRequest:
+      type: object
+      properties:
+        reviewId:
+          type: string
+        userNotes:
+          type: string
+      required:
+        - reviewId
+
+    GeneratedResponse:
+      type: object
+      properties:
+        draftText:
+          type: string
+        responseId:
+          type: string
+      required:
+        - draftText
+        - responseId
+
+    AnalyticsSummary:
+      type: object
+      properties:
+        totalReviews:
+          type: integer
+        averageRating:
+          type: number
+        responseRate:
+          type: number
+        avgResponseTimeHours:
+          type: number
+        pendingReviews:
+          type: integer
+        reviewsThisWeek:
+          type: integer
+      required:
+        - totalReviews
+        - averageRating
+        - responseRate
+        - avgResponseTimeHours
+        - pendingReviews
+        - reviewsThisWeek
+
+    RatingTrendPoint:
+      type: object
+      properties:
+        date:
+          type: string
+        averageRating:
+          type: number
+        reviewCount:
+          type: integer
+      required:
+        - date
+        - averageRating
+        - reviewCount
+
+    PlatformBreakdown:
+      type: object
+      properties:
+        platform:
+          type: string
+          enum: [google, zomato, tripadvisor]
+        reviewCount:
+          type: integer
+        averageRating:
+          type: number
+        responseRate:
+          type: number
+      required:
+        - platform
+        - reviewCount
+        - averageRating
+        - responseRate
+
+    NotificationPreferences:
+      type: object
+      properties:
+        notificationEmail:
+          type: boolean
+        notificationPush:
+          type: boolean
+        notificationMinRating:
+          type: integer
+      required:
+        - notificationEmail
+        - notificationPush
+        - notificationMinRating
+
+    UpdateNotificationPreferencesRequest:
+      type: object
+      properties:
+        notificationEmail:
+          type: boolean
+        notificationPush:
+          type: boolean
+        notificationMinRating:
+          type: integer

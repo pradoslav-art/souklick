@@ -1,0 +1,237 @@
+import { Router, type IRouter } from "express";
+import { eq, and, lte, desc, asc, sql, count, inArray } from "drizzle-orm";
+import { db, reviewsTable, locationsTable, responsesTable } from "@workspace/db";
+import { requireAuth } from "../middlewares/auth";
+
+const router: IRouter = Router();
+
+function formatReview(review: typeof reviewsTable.$inferSelect, locationName: string) {
+  return {
+    id: review.id,
+    locationId: review.locationId,
+    platform: review.platform,
+    platformReviewId: review.platformReviewId,
+    reviewerName: review.reviewerName,
+    reviewerProfileUrl: review.reviewerProfileUrl,
+    rating: review.rating,
+    reviewText: review.reviewText,
+    reviewDate: review.reviewDate,
+    responseStatus: review.responseStatus,
+    sentimentScore: review.sentimentScore ? Number(review.sentimentScore) : null,
+    locationName,
+    createdAt: review.createdAt,
+  };
+}
+
+router.get("/reviews/priority-count", requireAuth, async (req, res): Promise<void> => {
+  const orgLocations = await db
+    .select({ id: locationsTable.id })
+    .from(locationsTable)
+    .where(eq(locationsTable.organizationId, req.session.organizationId!));
+
+  if (orgLocations.length === 0) {
+    res.json({ count: 0 });
+    return;
+  }
+
+  const locationIds = orgLocations.map((l) => l.id);
+
+  const [result] = await db
+    .select({ count: count(reviewsTable.id) })
+    .from(reviewsTable)
+    .where(
+      and(
+        inArray(reviewsTable.locationId, locationIds),
+        lte(reviewsTable.rating, 3),
+        eq(reviewsTable.responseStatus, "pending")
+      )
+    );
+
+  res.json({ count: Number(result?.count ?? 0) });
+});
+
+router.get("/reviews", requireAuth, async (req, res): Promise<void> => {
+  const { locationId, platform, rating, status, priorityOnly, page = "1", limit = "20" } = req.query;
+
+  const orgLocations = await db
+    .select({ id: locationsTable.id, name: locationsTable.name })
+    .from(locationsTable)
+    .where(eq(locationsTable.organizationId, req.session.organizationId!));
+
+  if (orgLocations.length === 0) {
+    res.json({ reviews: [], total: 0, page: 1, limit: 20, totalPages: 0 });
+    return;
+  }
+
+  const locationMap = new Map(orgLocations.map((l) => [l.id, l.name]));
+  let allowedLocationIds = orgLocations.map((l) => l.id);
+
+  if (locationId && typeof locationId === "string") {
+    if (!locationMap.has(locationId)) {
+      res.status(403).json({ error: "Access denied to this location" });
+      return;
+    }
+    allowedLocationIds = [locationId];
+  }
+
+  const pageNum = Math.max(1, parseInt(String(page), 10));
+  const limitNum = Math.min(100, Math.max(1, parseInt(String(limit), 10)));
+  const offset = (pageNum - 1) * limitNum;
+
+  const conditions = [inArray(reviewsTable.locationId, allowedLocationIds)];
+
+  if (platform && typeof platform === "string") {
+    conditions.push(eq(reviewsTable.platform, platform as "google" | "zomato" | "tripadvisor"));
+  }
+
+  if (rating && typeof rating === "string") {
+    conditions.push(eq(reviewsTable.rating, parseInt(rating, 10)));
+  }
+
+  if (status && typeof status === "string") {
+    conditions.push(eq(reviewsTable.responseStatus, status as "pending" | "draft_saved" | "responded" | "skipped"));
+  }
+
+  if (priorityOnly === "true") {
+    conditions.push(lte(reviewsTable.rating, 3));
+    conditions.push(eq(reviewsTable.responseStatus, "pending"));
+  }
+
+  const whereClause = and(...conditions);
+
+  const [totalResult] = await db
+    .select({ count: count(reviewsTable.id) })
+    .from(reviewsTable)
+    .where(whereClause);
+
+  const total = Number(totalResult?.count ?? 0);
+
+  const orderBy = priorityOnly === "true"
+    ? asc(reviewsTable.reviewDate)
+    : desc(reviewsTable.reviewDate);
+
+  const reviews = await db
+    .select()
+    .from(reviewsTable)
+    .where(whereClause)
+    .orderBy(orderBy)
+    .limit(limitNum)
+    .offset(offset);
+
+  const formattedReviews = reviews.map((r) =>
+    formatReview(r, locationMap.get(r.locationId) ?? "Unknown Location")
+  );
+
+  res.json({
+    reviews: formattedReviews,
+    total,
+    page: pageNum,
+    limit: limitNum,
+    totalPages: Math.ceil(total / limitNum),
+  });
+});
+
+router.post("/reviews", requireAuth, async (req, res): Promise<void> => {
+  const { locationId, platform, reviewerName, rating, reviewText, reviewDate } = req.body;
+
+  if (!locationId || !platform || !reviewerName || !rating) {
+    res.status(400).json({ error: "Missing required fields" });
+    return;
+  }
+
+  const [location] = await db
+    .select()
+    .from(locationsTable)
+    .where(and(eq(locationsTable.id, locationId), eq(locationsTable.organizationId, req.session.organizationId!)));
+
+  if (!location) {
+    res.status(404).json({ error: "Location not found" });
+    return;
+  }
+
+  const [review] = await db.insert(reviewsTable).values({
+    locationId,
+    platform,
+    platformReviewId: `manual-${crypto.randomUUID()}`,
+    reviewerName,
+    rating: parseInt(String(rating), 10),
+    reviewText,
+    reviewDate: reviewDate ? new Date(reviewDate) : new Date(),
+  }).returning();
+
+  res.status(201).json(formatReview(review, location.name));
+});
+
+router.get("/reviews/:id", requireAuth, async (req, res): Promise<void> => {
+  const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+
+  const [review] = await db.select().from(reviewsTable).where(eq(reviewsTable.id, id));
+
+  if (!review) {
+    res.status(404).json({ error: "Review not found" });
+    return;
+  }
+
+  const [location] = await db
+    .select()
+    .from(locationsTable)
+    .where(and(eq(locationsTable.id, review.locationId), eq(locationsTable.organizationId, req.session.organizationId!)));
+
+  if (!location) {
+    res.status(404).json({ error: "Review not found" });
+    return;
+  }
+
+  const responses = await db
+    .select()
+    .from(responsesTable)
+    .where(eq(responsesTable.reviewId, id))
+    .orderBy(desc(responsesTable.createdAt));
+
+  res.json({
+    ...formatReview(review, location.name),
+    responses: responses.map((r) => ({
+      id: r.id,
+      reviewId: r.reviewId,
+      draftedBy: r.draftedBy,
+      draftText: r.draftText,
+      finalText: r.finalText,
+      status: r.status,
+      createdAt: r.createdAt,
+      updatedAt: r.updatedAt,
+    })),
+  });
+});
+
+router.patch("/reviews/:id", requireAuth, async (req, res): Promise<void> => {
+  const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+
+  const [review] = await db.select().from(reviewsTable).where(eq(reviewsTable.id, id));
+
+  if (!review) {
+    res.status(404).json({ error: "Review not found" });
+    return;
+  }
+
+  const [location] = await db
+    .select()
+    .from(locationsTable)
+    .where(and(eq(locationsTable.id, review.locationId), eq(locationsTable.organizationId, req.session.organizationId!)));
+
+  if (!location) {
+    res.status(403).json({ error: "Access denied" });
+    return;
+  }
+
+  const { responseStatus } = req.body;
+
+  const [updated] = await db
+    .update(reviewsTable)
+    .set({ responseStatus })
+    .where(eq(reviewsTable.id, id))
+    .returning();
+
+  res.json(formatReview(updated, location.name));
+});
+
+export default router;

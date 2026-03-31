@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "Souklick"
+version = "1.0.0"
+id = "artifacts/souklick"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 26011
+
+[services.development]
+run = "pnpm --filter @workspace/souklick run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/souklick", "run", "build" ]
+publicDir = "artifacts/souklick/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "26011"
+BASE_PATH = "/"

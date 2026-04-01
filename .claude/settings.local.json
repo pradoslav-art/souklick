@@ -4,7 +4,19 @@
       "Bash(git pull:*)",
       "Bash(git add:*)",
       "Bash(git commit:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(pnpm add:*)",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); [print\\(k,'=',v\\) for k,v in d.items\\(\\) if 'PORT' in k or 'BASE' in k or 'URL' in k or 'HOST' in k]\")",
+      "Bash(read hex:*)",
+      "Bash(printf '%d\\\\n' 0x__TRACKED_VAR__)",
+      "Bash(curl -s http://localhost:8080/api/healthz)",
+      "Bash(curl -s http://localhost:8288/api/healthz)",
+      "Bash(xargs cat:*)",
+      "Bash(curl:*)",
+      "Bash(env)",
+      "Bash(pnpm run:*)",
+      "Bash(kill 3193)",
+      "Bash(PORT=8080 node --enable-source-maps ./dist/index.mjs)"
     ]
   }
 }

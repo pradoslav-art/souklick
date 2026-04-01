@@ -192,3 +192,50 @@ Your job is to be the developer they would hire if they could afford a great one
 - Committed CLAUDE.md and .claude/settings.local.json, then pushed to GitHub
 
 **No corrections or lessons this session — first session establishing the workflow.**
+
+---
+
+### Session: 2026-04-01
+
+**What we did:**
+
+1. **Confirmed existing auth system** — answered user's question about whether the app has user authentication. It does: session-based login/signup/logout, bcrypt passwords, protected routes, and data scoped per organisation via `organizationId`.
+
+2. **Built full admin dashboard at `/admin`** — comprehensive dashboard only accessible to the user whose email matches the `ADMIN_EMAIL` environment variable.
+
+   Files created:
+   - `artifacts/api-server/src/middlewares/adminAuth.ts` — middleware that checks user email against `ADMIN_EMAIL` env var
+   - `artifacts/api-server/src/routes/admin.ts` — 5 API endpoints: `/api/admin/stats`, `/api/admin/activity`, `/api/admin/users`, `/api/admin/export/users`, `/api/admin/export/activity`
+   - `artifacts/souklick/src/pages/admin.tsx` — full frontend dashboard page
+
+   Files modified:
+   - `artifacts/api-server/src/routes/index.ts` — registered admin router
+   - `artifacts/souklick/src/App.tsx` — added `/admin` route
+
+   Dashboard sections (live data):
+   - User metrics: total users, new this week (% change), active this week, DAU today
+   - Review responses: totals, this week, today, avg per user, last 50 feed with user/reviewer/platform/rating
+   - Conversion funnel: signup → first action → return visit → power user with drop-off %
+   - Retention: Day 1 rate, Week 1 rate, at-risk users (active then gone 7+ days)
+   - Speed: time from signup to first action
+   - Feature usage: reviews monitored, locations added, response status breakdown
+   - Power users: top 10 by total actions
+   - Charts: daily signups (30 days), daily actions (30 days), activity by day of week, activity by hour
+   - Full user list table with plan/status
+   - CSV export for users and activity
+
+   Dashboard sections (placeholders — no data yet):
+   - Revenue/transactions (needs Stripe)
+   - Geography (needs IP tracking)
+   - Devices/browsers (needs frontend analytics e.g. PostHog)
+   - Error log (needs error logging / Sentry)
+   - Search queries (needs search event tracking)
+   - Spelling check secondary action (needs event tracking)
+
+**Pending action (not done yet):**
+- `ADMIN_EMAIL` env var must be set in Replit Secrets to `souklickuae@gmail.com` before the admin dashboard will grant access. Currently NOT set — admin page will show "Admin access not configured" until this is done.
+
+**Issues discovered:**
+- Two pre-existing TypeScript errors in `review-modal.tsx` (missing `CheckCircle` import) and `dashboard.tsx` (`keepPreviousData` deprecated in React Query v5). These are not breaking at runtime but should be cleaned up in a future session.
+
+**No corrections from user this session.**

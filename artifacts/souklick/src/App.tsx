@@ -14,6 +14,7 @@ import Locations from "@/pages/locations";
 import Analytics from "@/pages/analytics";
 import Settings from "@/pages/settings";
 import Onboarding from "@/pages/onboarding";
+import AdminDashboard from "@/pages/admin";
 import NotFound from "@/pages/not-found";
 
 const queryClient = new QueryClient();
@@ -80,6 +81,9 @@ function Router() {
       </Route>
       <Route path="/settings/:tab">
         {(params) => <ProtectedRoute component={Settings} tab={params?.tab} />}
+      </Route>
+      <Route path="/admin">
+        <ProtectedRoute component={AdminDashboard} />
       </Route>
 
       <Route component={NotFound} />

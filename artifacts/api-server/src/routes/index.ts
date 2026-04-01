@@ -9,9 +9,11 @@ import aiRouter from "./ai";
 import analyticsRouter from "./analytics";
 import notificationsRouter from "./notifications";
 import testEmailRouter from "./test-email";
+import adminRouter from "./admin";
 
 const router: IRouter = Router();
 
+router.use(adminRouter);
 router.use(healthRouter);
 router.use(authRouter);
 router.use(organizationsRouter);

@@ -16,7 +16,8 @@
       "Bash(env)",
       "Bash(pnpm run:*)",
       "Bash(kill 3193)",
-      "Bash(PORT=8080 node --enable-source-maps ./dist/index.mjs)"
+      "Bash(PORT=8080 node --enable-source-maps ./dist/index.mjs)",
+      "Bash(echo \"EXIT:$?\")"
     ]
   }
 }

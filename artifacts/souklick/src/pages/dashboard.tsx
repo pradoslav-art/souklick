@@ -23,6 +23,18 @@ import {
 } from "@/components/ui/select";
 import ReviewCard from "@/components/review-card";
 
+const QUOTES = [
+  { text: "Your reputation is your most valuable asset. Protect it daily.", author: "Unknown" },
+  { text: "Every review is a chance to show who you really are.", author: "Unknown" },
+  { text: "Customer feedback is the compass that guides great businesses.", author: "Unknown" },
+  { text: "Small acts of care turn customers into loyal advocates.", author: "Unknown" },
+  { text: "A single kind response can turn a critic into a champion.", author: "Unknown" },
+  { text: "Excellence is not a destination but a continuous journey.", author: "Brian Tracy" },
+  { text: "Your most unhappy customers are your greatest source of learning.", author: "Bill Gates" },
+];
+
+const todaysQuote = QUOTES[new Date().getDay() % QUOTES.length];
+
 export default function Dashboard() {
   const [platform, setPlatform] = useState<GetReviewsPlatform | "all">("all");
   const [locationId, setLocationId] = useState<string>("all");
@@ -74,6 +86,16 @@ export default function Dashboard() {
             </Button>
           </Link>
         </div>
+      </div>
+
+      <div className="bg-card border border-border/60 rounded-2xl px-5 py-3.5 mb-6 flex items-center gap-3 shadow-xs">
+        <span className="text-primary text-base select-none">✦</span>
+        <p className="text-[13.5px] text-foreground/70 italic leading-snug">
+          "{todaysQuote.text}"
+          {todaysQuote.author !== "Unknown" && (
+            <span className="not-italic font-medium text-foreground/45 ml-1.5">— {todaysQuote.author}</span>
+          )}
+        </p>
       </div>
 
       <div className="bg-card border border-border rounded-xl shadow-sm mb-6 p-4">

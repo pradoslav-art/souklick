@@ -1,8 +1,8 @@
 import { Link, useLocation } from "wouter";
 import { LayoutDashboard, AlertCircle, MapPin, BarChart3, Settings, LogOut } from "lucide-react";
-import { 
-  useLogoutUser, 
-  useGetPriorityCount, 
+import {
+  useLogoutUser,
+  useGetPriorityCount,
   getGetPriorityCountQueryKey,
   useGetCurrentUser,
   getGetCurrentUserQueryKey
@@ -10,13 +10,13 @@ import {
 import { cn } from "@/lib/utils";
 import { useQueryClient } from "@tanstack/react-query";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuLabel, 
-  DropdownMenuSeparator, 
-  DropdownMenuTrigger 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 
 export default function Sidebar() {
@@ -37,9 +37,9 @@ export default function Sidebar() {
 
   const navItems = [
     { name: "Dashboard", href: "/", icon: LayoutDashboard },
-    { 
-      name: "Priority Queue", 
-      href: "/priority", 
+    {
+      name: "Priority Queue",
+      href: "/priority",
       icon: AlertCircle,
       badge: priorityCount?.count ? priorityCount.count : 0
     },
@@ -49,37 +49,45 @@ export default function Sidebar() {
   ];
 
   return (
-    <div className="flex h-screen w-64 flex-col bg-sidebar border-r border-sidebar-border">
-      <div className="p-6 flex items-center gap-3">
-        <div className="w-8 h-8 bg-primary rounded-md flex items-center justify-center text-primary-foreground font-bold text-lg">
+    <div className="flex h-screen w-60 flex-col bg-sidebar border-r border-sidebar-border">
+      {/* Logo */}
+      <div className="px-5 py-6 flex items-center gap-2.5">
+        <div className="w-7 h-7 rounded-lg flex items-center justify-center text-white font-semibold text-sm"
+          style={{ background: "linear-gradient(145deg, hsl(25,95%,58%), hsl(25,95%,46%))" }}>
           S
         </div>
-        <span className="text-xl font-bold tracking-tight text-sidebar-foreground">
+        <span className="text-[15px] font-semibold tracking-tight text-sidebar-foreground">
           Souklick
         </span>
       </div>
 
-      <nav className="flex-1 px-4 space-y-1 overflow-y-auto">
+      {/* Nav */}
+      <nav className="flex-1 px-3 space-y-0.5 overflow-y-auto">
         {navItems.map((item) => {
           const isActive = location === item.href || (item.href !== "/" && location.startsWith(item.href));
           return (
             <Link key={item.name} href={item.href}>
               <div
                 className={cn(
-                  "flex items-center justify-between px-3 py-2.5 rounded-md text-sm font-medium transition-colors cursor-pointer",
-                  isActive 
-                    ? "bg-primary text-primary-foreground" 
-                    : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                  "flex items-center justify-between px-3 py-2 rounded-xl text-[13.5px] font-medium transition-all duration-150 cursor-pointer",
+                  isActive
+                    ? "bg-primary/10 text-primary"
+                    : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground"
                 )}
               >
-                <div className="flex items-center gap-3">
-                  <item.icon className={cn("w-5 h-5", isActive ? "text-primary-foreground" : "text-muted-foreground")} />
+                <div className="flex items-center gap-2.5">
+                  <item.icon className={cn(
+                    "w-[17px] h-[17px] transition-colors",
+                    isActive ? "text-primary" : "text-sidebar-foreground/40"
+                  )} />
                   {item.name}
                 </div>
                 {item.badge ? (
                   <span className={cn(
-                    "px-2 py-0.5 rounded-full text-xs font-semibold",
-                    isActive ? "bg-white text-primary" : "bg-destructive text-destructive-foreground"
+                    "px-1.5 py-0.5 rounded-full text-[11px] font-semibold tabular-nums",
+                    isActive
+                      ? "bg-primary/20 text-primary"
+                      : "bg-destructive/15 text-destructive"
                   )}>
                     {item.badge}
                   </span>
@@ -90,37 +98,38 @@ export default function Sidebar() {
         })}
       </nav>
 
-      <div className="p-4 border-t border-sidebar-border">
+      {/* User */}
+      <div className="px-3 pb-4 pt-2 border-t border-sidebar-border">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <div className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-sidebar-accent transition-colors cursor-pointer">
-              <Avatar className="h-9 w-9 border border-border">
+            <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl hover:bg-sidebar-accent transition-colors cursor-pointer">
+              <Avatar className="h-7 w-7 ring-1 ring-border/50">
                 <AvatarImage src={user?.avatarUrl || ""} alt={user?.fullName || "User"} />
-                <AvatarFallback className="bg-primary/10 text-primary">
+                <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">
                   {user?.fullName?.charAt(0).toUpperCase() || "U"}
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-sidebar-foreground truncate">
+                <p className="text-[13px] font-medium text-sidebar-foreground truncate leading-tight">
                   {user?.fullName}
                 </p>
-                <p className="text-xs text-muted-foreground truncate">
+                <p className="text-[11px] text-muted-foreground/70 truncate leading-tight mt-0.5">
                   {user?.email}
                 </p>
               </div>
             </div>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuLabel>My Account</DropdownMenuLabel>
+          <DropdownMenuContent align="end" className="w-52">
+            <DropdownMenuLabel className="text-xs font-medium text-muted-foreground">My Account</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => setLocation("/settings")}>
-              <Settings className="w-4 h-4 mr-2 text-muted-foreground" />
+              <Settings className="w-3.5 h-3.5 mr-2 text-muted-foreground" />
               Settings
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:bg-destructive/10">
-              <LogOut className="w-4 h-4 mr-2" />
-              Log out
+              <LogOut className="w-3.5 h-3.5 mr-2" />
+              Sign out
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

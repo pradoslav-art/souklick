@@ -121,7 +121,7 @@ export default function Locations() {
                 </div>
               </CardHeader>
               <CardContent className="p-0">
-                <div className="grid grid-cols-3 divide-x border-b bg-card">
+                <div className="grid grid-cols-3 divide-x border-b bg-card text-xs sm:text-sm">
                   <div className="p-4 flex flex-col items-center text-center">
                     <span className="text-xs text-muted-foreground font-medium uppercase mb-1">Rating</span>
                     <div className="flex items-center gap-1">

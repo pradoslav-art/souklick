@@ -149,7 +149,7 @@ export default function Dashboard() {
             </div>
 
             <Select value={platform} onValueChange={(v) => { setPlatform(v as any); setPage(1); }}>
-              <SelectTrigger className="w-[140px] bg-background">
+              <SelectTrigger className="w-full sm:w-[140px] bg-background">
                 <SelectValue placeholder="Platform" />
               </SelectTrigger>
               <SelectContent>
@@ -161,7 +161,7 @@ export default function Dashboard() {
             </Select>
 
             <Select value={locationId} onValueChange={(v) => { setLocationId(v); setPage(1); }}>
-              <SelectTrigger className="w-[180px] bg-background truncate">
+              <SelectTrigger className="w-full sm:w-[180px] bg-background truncate">
                 <SelectValue placeholder="Location" />
               </SelectTrigger>
               <SelectContent>
@@ -173,7 +173,7 @@ export default function Dashboard() {
             </Select>
 
             <Select value={rating} onValueChange={(v) => { setRating(v); setPage(1); }}>
-              <SelectTrigger className="w-[120px] bg-background">
+              <SelectTrigger className="w-full sm:w-[120px] bg-background">
                 <SelectValue placeholder="Rating" />
               </SelectTrigger>
               <SelectContent>
@@ -187,7 +187,7 @@ export default function Dashboard() {
             </Select>
 
             <Select value={status} onValueChange={(v) => { setStatus(v as any); setPage(1); }}>
-              <SelectTrigger className="w-[140px] bg-background">
+              <SelectTrigger className="w-full sm:w-[140px] bg-background">
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>

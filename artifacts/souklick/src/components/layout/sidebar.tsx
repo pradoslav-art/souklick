@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, AlertCircle, MapPin, BarChart3, Settings, LogOut, ShieldCheck, Zap } from "lucide-react";
+import { LayoutDashboard, AlertCircle, MapPin, BarChart3, Settings, LogOut, ShieldCheck, Zap, X } from "lucide-react";
 import {
   useLogoutUser,
   useGetPriorityCount,
@@ -19,7 +19,12 @@ import {
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 
-export default function Sidebar() {
+interface SidebarProps {
+  mobileOpen?: boolean;
+  onMobileClose?: () => void;
+}
+
+export default function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
   const [location, setLocation] = useLocation();
   const queryClient = useQueryClient();
   const { data: user } = useGetCurrentUser({ query: { queryKey: getGetCurrentUserQueryKey() } });
@@ -33,6 +38,10 @@ export default function Sidebar() {
         setLocation("/login");
       }
     });
+  };
+
+  const handleNavClick = () => {
+    onMobileClose?.();
   };
 
   const navItems = [
@@ -50,16 +59,32 @@ export default function Sidebar() {
   ];
 
   return (
-    <div className="flex h-screen w-60 flex-col bg-sidebar border-r border-sidebar-border">
+    <div className={cn(
+      "flex h-dvh w-60 shrink-0 flex-col bg-sidebar border-r border-sidebar-border",
+      // Mobile: fixed drawer that slides in/out
+      "fixed inset-y-0 left-0 z-50 transition-transform duration-300 ease-in-out",
+      "md:relative md:translate-x-0 md:z-auto md:transition-none",
+      mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+    )}>
       {/* Logo */}
-      <div className="px-5 py-6 flex items-center gap-2.5">
-        <div className="w-7 h-7 rounded-lg flex items-center justify-center text-white font-semibold text-sm"
-          style={{ background: "linear-gradient(145deg, hsl(25,95%,58%), hsl(25,95%,46%))" }}>
-          S
+      <div className="px-5 py-6 flex items-center justify-between gap-2.5">
+        <div className="flex items-center gap-2.5">
+          <div className="w-7 h-7 rounded-lg flex items-center justify-center text-white font-semibold text-sm"
+            style={{ background: "linear-gradient(145deg, hsl(25,95%,58%), hsl(25,95%,46%))" }}>
+            S
+          </div>
+          <span className="text-[15px] font-semibold tracking-tight text-sidebar-foreground">
+            Souklick
+          </span>
         </div>
-        <span className="text-[15px] font-semibold tracking-tight text-sidebar-foreground">
-          Souklick
-        </span>
+        {/* Close button on mobile */}
+        <button
+          onClick={onMobileClose}
+          className="md:hidden p-1 rounded-lg hover:bg-sidebar-accent transition-colors text-sidebar-foreground/50"
+          aria-label="Close menu"
+        >
+          <X className="w-4 h-4" />
+        </button>
       </div>
 
       {/* Nav */}
@@ -67,7 +92,7 @@ export default function Sidebar() {
         {navItems.map((item) => {
           const isActive = location === item.href || (item.href !== "/" && location.startsWith(item.href));
           return (
-            <Link key={item.name} href={item.href}>
+            <Link key={item.name} href={item.href} onClick={handleNavClick}>
               <div
                 className={cn(
                   "flex items-center justify-between px-3 py-2 rounded-xl text-[13.5px] font-medium transition-all duration-150 cursor-pointer",
@@ -102,7 +127,7 @@ export default function Sidebar() {
       {/* Upgrade banner for trial users */}
       {(user as any)?.subscriptionPlan === "trial" && (
         <div className="px-3 pb-2">
-          <Link href="/upgrade">
+          <Link href="/upgrade" onClick={handleNavClick}>
             <div className="bg-primary/10 hover:bg-primary/15 transition-colors rounded-xl px-3 py-3 cursor-pointer">
               <div className="flex items-center gap-2 mb-1">
                 <Zap className="w-3.5 h-3.5 text-primary" />
@@ -140,7 +165,7 @@ export default function Sidebar() {
           <DropdownMenuContent align="end" className="w-52">
             <DropdownMenuLabel className="text-xs font-medium text-muted-foreground">My Account</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => setLocation("/settings")}>
+            <DropdownMenuItem onClick={() => { setLocation("/settings"); handleNavClick(); }}>
               <Settings className="w-3.5 h-3.5 mr-2 text-muted-foreground" />
               Settings
             </DropdownMenuItem>

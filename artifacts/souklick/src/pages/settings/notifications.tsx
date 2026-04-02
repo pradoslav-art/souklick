@@ -163,7 +163,7 @@ export default function NotificationSettings() {
                     onValueChange={(v) => field.onChange(Number(v))}
                   >
                     <FormControl>
-                      <SelectTrigger className="w-[280px]">
+                      <SelectTrigger className="w-full sm:w-[280px]">
                         <SelectValue placeholder="Select a threshold" />
                       </SelectTrigger>
                     </FormControl>

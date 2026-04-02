@@ -202,7 +202,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <div className="flex-1 overflow-auto -mx-8 px-8 pb-8">
+      <div className="flex-1 overflow-y-auto pb-8">
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
             <Loader2 className="w-8 h-8 animate-spin mb-4 text-primary" />

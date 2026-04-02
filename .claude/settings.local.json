@@ -21,7 +21,8 @@
       "Bash(npx tsc:*)",
       "Bash(pnpm push-force:*)",
       "Bash(pnpm typecheck:*)",
-      "Bash(node -e \"const s = require\\('/home/runner/workspace/node_modules/stripe'\\); console.log\\(s.LATEST_API_VERSION || 'check types'\\)\")"
+      "Bash(node -e \"const s = require\\('/home/runner/workspace/node_modules/stripe'\\); console.log\\(s.LATEST_API_VERSION || 'check types'\\)\")",
+      "Bash(xargs ls:*)"
     ]
   }
 }

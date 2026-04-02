@@ -6,9 +6,11 @@ import { requireAuth } from "../middlewares/auth";
 
 const router = Router();
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2026-03-25.dahlia",
-});
+function getStripe() {
+  const key = process.env.STRIPE_SECRET_KEY;
+  if (!key) throw new Error("STRIPE_SECRET_KEY is not set in environment variables");
+  return new Stripe(key, { apiVersion: "2026-03-25.dahlia" });
+}
 
 const PLANS = {
   monthly: {
@@ -46,6 +48,7 @@ router.post("/billing/checkout", requireAuth, async (req, res): Promise<void> =>
   const selectedPlan = PLANS[plan];
 
   try {
+    const stripe = getStripe();
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
       customer: org.stripeCustomerId || undefined,
@@ -88,29 +91,35 @@ router.post("/billing/confirm", requireAuth, async (req, res): Promise<void> => 
     return;
   }
 
-  const session = await stripe.checkout.sessions.retrieve(sessionId, {
-    expand: ["subscription"],
-  });
+  try {
+    const stripe = getStripe();
+    const session = await stripe.checkout.sessions.retrieve(sessionId, {
+      expand: ["subscription"],
+    });
 
-  if (session.payment_status !== "paid") {
-    res.status(400).json({ error: "Payment not completed" });
-    return;
+    if (session.payment_status !== "paid") {
+      res.status(400).json({ error: "Payment not completed" });
+      return;
+    }
+
+    const plan = session.metadata?.plan as "monthly" | "yearly";
+    const subscription = session.subscription as Stripe.Subscription;
+
+    await db
+      .update(organizationsTable)
+      .set({
+        subscriptionPlan: plan,
+        subscriptionStatus: "active",
+        stripeCustomerId: session.customer as string,
+        stripeSubscriptionId: subscription?.id,
+      })
+      .where(eq(organizationsTable.id, req.session.organizationId!));
+
+    res.json({ success: true, plan });
+  } catch (err: any) {
+    console.error("Stripe confirm error:", err?.message);
+    res.status(500).json({ error: err?.message || "Failed to confirm payment" });
   }
-
-  const plan = session.metadata?.plan as "monthly" | "yearly";
-  const subscription = session.subscription as Stripe.Subscription;
-
-  await db
-    .update(organizationsTable)
-    .set({
-      subscriptionPlan: plan,
-      subscriptionStatus: "active",
-      stripeCustomerId: session.customer as string,
-      stripeSubscriptionId: subscription?.id,
-    })
-    .where(eq(organizationsTable.id, req.session.organizationId!));
-
-  res.json({ success: true, plan });
 });
 
 export default router;

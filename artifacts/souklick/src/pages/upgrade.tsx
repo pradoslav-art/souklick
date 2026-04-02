@@ -30,16 +30,17 @@ export default function Upgrade() {
         body: JSON.stringify({ plan }),
       });
 
+      const data = await res.json();
+
       if (!res.ok) {
-        throw new Error("Failed to start checkout");
+        throw new Error(data?.error || "Failed to start checkout");
       }
 
-      const { url } = await res.json();
-      window.location.href = url;
-    } catch {
+      window.location.href = data.url;
+    } catch (err: any) {
       toast({
-        title: "Something went wrong",
-        description: "Could not start checkout. Please try again.",
+        title: "Could not start checkout",
+        description: err?.message || "Please try again.",
         variant: "destructive",
       });
       setLoading(null);

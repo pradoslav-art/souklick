@@ -45,34 +45,38 @@ router.post("/billing/checkout", requireAuth, async (req, res): Promise<void> =>
   const origin = req.headers.origin || "http://localhost:5173";
   const selectedPlan = PLANS[plan];
 
-  const session = await stripe.checkout.sessions.create({
-    mode: "subscription",
-    customer: org.stripeCustomerId || undefined,
-    customer_creation: org.stripeCustomerId ? undefined : "always",
-    line_items: [
-      {
-        price_data: {
-          currency: "usd",
-          product_data: {
-            name: `Souklick ${selectedPlan.label} Plan`,
+  try {
+    const session = await stripe.checkout.sessions.create({
+      mode: "subscription",
+      customer: org.stripeCustomerId || undefined,
+      line_items: [
+        {
+          price_data: {
+            currency: "usd",
+            product_data: {
+              name: `Souklick ${selectedPlan.label} Plan`,
+            },
+            recurring: {
+              interval: selectedPlan.interval,
+            },
+            unit_amount: selectedPlan.amount,
           },
-          recurring: {
-            interval: selectedPlan.interval,
-          },
-          unit_amount: selectedPlan.amount,
+          quantity: 1,
         },
-        quantity: 1,
+      ],
+      success_url: `${origin}/billing/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${origin}/upgrade`,
+      metadata: {
+        organizationId: org.id,
+        plan,
       },
-    ],
-    success_url: `${origin}/billing/success?session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${origin}/upgrade`,
-    metadata: {
-      organizationId: org.id,
-      plan,
-    },
-  });
+    });
 
-  res.json({ url: session.url });
+    res.json({ url: session.url });
+  } catch (err: any) {
+    console.error("Stripe checkout error:", err?.message);
+    res.status(500).json({ error: err?.message || "Failed to create checkout session" });
+  }
 });
 
 // Confirm payment after redirect from Stripe

@@ -4,7 +4,7 @@ import { z } from "zod/v4";
 
 export const brandVoiceFormalityEnum = pgEnum("brand_voice_formality", ["casual", "balanced", "professional"]);
 export const brandVoiceEmojisEnum = pgEnum("brand_voice_emojis", ["never", "sometimes", "often"]);
-export const subscriptionPlanEnum = pgEnum("subscription_plan", ["trial", "starter", "growth", "enterprise"]);
+export const subscriptionPlanEnum = pgEnum("subscription_plan", ["trial", "starter", "growth", "enterprise", "monthly", "yearly"]);
 export const subscriptionStatusEnum = pgEnum("subscription_status", ["active", "past_due", "cancelled"]);
 
 export const organizationsTable = pgTable("organizations", {
@@ -17,6 +17,8 @@ export const organizationsTable = pgTable("organizations", {
   subscriptionPlan: subscriptionPlanEnum("subscription_plan").notNull().default("trial"),
   subscriptionStatus: subscriptionStatusEnum("subscription_status").notNull().default("active"),
   trialEndsAt: timestamp("trial_ends_at", { withTimezone: true }),
+  stripeCustomerId: text("stripe_customer_id"),
+  stripeSubscriptionId: text("stripe_subscription_id"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });

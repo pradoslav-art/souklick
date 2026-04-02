@@ -18,7 +18,10 @@
       "Bash(kill 3193)",
       "Bash(PORT=8080 node --enable-source-maps ./dist/index.mjs)",
       "Bash(echo \"EXIT:$?\")",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(pnpm push-force:*)",
+      "Bash(pnpm typecheck:*)",
+      "Bash(node -e \"const s = require\\('/home/runner/workspace/node_modules/stripe'\\); console.log\\(s.LATEST_API_VERSION || 'check types'\\)\")"
     ]
   }
 }

@@ -10,10 +10,12 @@ import analyticsRouter from "./analytics";
 import notificationsRouter from "./notifications";
 import testEmailRouter from "./test-email";
 import adminRouter from "./admin";
+import billingRouter from "./billing";
 
 const router: IRouter = Router();
 
 router.use(adminRouter);
+router.use(billingRouter);
 router.use(healthRouter);
 router.use(authRouter);
 router.use(organizationsRouter);

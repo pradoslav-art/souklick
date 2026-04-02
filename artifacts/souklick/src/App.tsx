@@ -15,6 +15,8 @@ import Analytics from "@/pages/analytics";
 import Settings from "@/pages/settings";
 import Onboarding from "@/pages/onboarding";
 import AdminDashboard from "@/pages/admin";
+import Upgrade from "@/pages/upgrade";
+import BillingSuccess from "@/pages/billing-success";
 import NotFound from "@/pages/not-found";
 
 const queryClient = new QueryClient();
@@ -85,6 +87,10 @@ function Router() {
       <Route path="/admin">
         <ProtectedRoute component={AdminDashboard} />
       </Route>
+      <Route path="/upgrade">
+        <ProtectedRoute component={Upgrade} />
+      </Route>
+      <Route path="/billing/success" component={BillingSuccess} />
 
       <Route component={NotFound} />
     </Switch>

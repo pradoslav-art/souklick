@@ -18,6 +18,11 @@ router.get("/auth/me", requireAuth, async (req, res): Promise<void> => {
     return;
   }
 
+  const [org] = await db
+    .select()
+    .from(organizationsTable)
+    .where(eq(organizationsTable.id, user.organizationId));
+
   const adminEmail = process.env.ADMIN_EMAIL;
   res.json({
     id: user.id,
@@ -31,6 +36,9 @@ router.get("/auth/me", requireAuth, async (req, res): Promise<void> => {
     notificationMinRating: user.notificationMinRating,
     createdAt: user.createdAt,
     isAdmin: adminEmail ? user.email === adminEmail : false,
+    subscriptionPlan: org?.subscriptionPlan ?? "trial",
+    subscriptionStatus: org?.subscriptionStatus ?? "active",
+    trialEndsAt: org?.trialEndsAt ?? null,
   });
 });
 

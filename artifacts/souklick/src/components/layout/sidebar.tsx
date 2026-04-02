@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, AlertCircle, MapPin, BarChart3, Settings, LogOut, ShieldCheck } from "lucide-react";
+import { LayoutDashboard, AlertCircle, MapPin, BarChart3, Settings, LogOut, ShieldCheck, Zap } from "lucide-react";
 import {
   useLogoutUser,
   useGetPriorityCount,
@@ -98,6 +98,23 @@ export default function Sidebar() {
           );
         })}
       </nav>
+
+      {/* Upgrade banner for trial users */}
+      {(user as any)?.subscriptionPlan === "trial" && (
+        <div className="px-3 pb-2">
+          <Link href="/upgrade">
+            <div className="bg-primary/10 hover:bg-primary/15 transition-colors rounded-xl px-3 py-3 cursor-pointer">
+              <div className="flex items-center gap-2 mb-1">
+                <Zap className="w-3.5 h-3.5 text-primary" />
+                <span className="text-[12px] font-semibold text-primary">You're on a free trial</span>
+              </div>
+              <p className="text-[11px] text-primary/70 leading-snug">
+                Upgrade to keep full access. Plans from $29/month.
+              </p>
+            </div>
+          </Link>
+        </div>
+      )}
 
       {/* User */}
       <div className="px-3 pb-4 pt-2 border-t border-sidebar-border">

@@ -20,7 +20,21 @@ const Upgrade = lazy(() => import("@/pages/upgrade"));
 const BillingSuccess = lazy(() => import("@/pages/billing-success"));
 const NotFound = lazy(() => import("@/pages/not-found"));
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 30_000,      // don't refetch data that's less than 30s old
+      gcTime: 5 * 60_000,     // keep unused cache for 5 minutes
+      retry: 1,               // fail fast — default 3 retries adds seconds on errors
+      refetchOnWindowFocus: false,
+    },
+  },
+});
+
+// Kick off chunk downloads immediately so they're ready when auth resolves.
+// These run in the background and don't block anything.
+import("@/pages/login");
+import("@/pages/dashboard");
 
 function PageLoader() {
   return (

@@ -18,6 +18,7 @@ router.get("/auth/me", requireAuth, async (req, res): Promise<void> => {
     return;
   }
 
+  const adminEmail = process.env.ADMIN_EMAIL;
   res.json({
     id: user.id,
     email: user.email,
@@ -29,6 +30,7 @@ router.get("/auth/me", requireAuth, async (req, res): Promise<void> => {
     notificationPush: user.notificationPush,
     notificationMinRating: user.notificationMinRating,
     createdAt: user.createdAt,
+    isAdmin: adminEmail ? user.email === adminEmail : false,
   });
 });
 

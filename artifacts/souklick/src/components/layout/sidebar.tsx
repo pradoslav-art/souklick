@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, AlertCircle, MapPin, BarChart3, Settings, LogOut } from "lucide-react";
+import { LayoutDashboard, AlertCircle, MapPin, BarChart3, Settings, LogOut, ShieldCheck } from "lucide-react";
 import {
   useLogoutUser,
   useGetPriorityCount,
@@ -46,6 +46,7 @@ export default function Sidebar() {
     { name: "Locations", href: "/locations", icon: MapPin },
     { name: "Analytics", href: "/analytics", icon: BarChart3 },
     { name: "Settings", href: "/settings", icon: Settings },
+    ...((user as any)?.isAdmin ? [{ name: "Admin", href: "/admin", icon: ShieldCheck }] : []),
   ];
 
   return (

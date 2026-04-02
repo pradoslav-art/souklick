@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { keepPreviousData } from "@tanstack/react-query";
 import { Link } from "wouter";
 import {
   useGetReviews,
@@ -76,7 +77,7 @@ export default function Dashboard() {
   }, [platform, locationId, rating, status, page]);
 
   const { data: reviewData, isLoading } = useGetReviews(queryParams, { 
-    query: { queryKey: getGetReviewsQueryKey(queryParams), keepPreviousData: true } 
+    query: { queryKey: getGetReviewsQueryKey(queryParams), placeholderData: keepPreviousData } 
   });
 
   const reviews = reviewData?.reviews || [];

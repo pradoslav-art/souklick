@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
-import { Bot, Save, Send, Loader2, RefreshCw, X, AlertCircle } from "lucide-react";
+import { Bot, Save, Send, Loader2, RefreshCw, X, AlertCircle, CheckCircle } from "lucide-react";
 import { 
   useGetReview, 
   useGenerateAiResponse,

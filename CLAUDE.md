@@ -239,3 +239,82 @@ Your job is to be the developer they would hire if they could afford a great one
 - Two pre-existing TypeScript errors in `review-modal.tsx` (missing `CheckCircle` import) and `dashboard.tsx` (`keepPreviousData` deprecated in React Query v5). These are not breaking at runtime but should be cleaned up in a future session.
 
 **No corrections from user this session.**
+
+---
+
+### Session: 2026-04-02
+
+**What we did:**
+
+1. **Confirmed `ADMIN_EMAIL` already set** — user confirmed it was set to `souklickuae@gmail.com` in Replit Secrets. Admin dashboard is live and accessible.
+
+2. **Confirmed pre-existing TypeScript errors were already fixed** — `CheckCircle` import in `review-modal.tsx` and `keepPreviousData` in `dashboard.tsx` were both already resolved before the session started.
+
+3. **Added Stripe subscription payments** — full checkout flow for Monthly ($29/month) and Yearly ($295/year) plans using Stripe's hosted checkout page.
+
+   Files created:
+   - `artifacts/api-server/src/routes/billing.ts` — `POST /api/billing/checkout` (creates Stripe session) and `POST /api/billing/confirm` (verifies payment, updates org)
+   - `artifacts/souklick/src/pages/upgrade.tsx` — pricing page at `/upgrade` with two plan cards
+   - `artifacts/souklick/src/pages/billing-success.tsx` — post-payment confirmation page at `/billing/success`
+
+   Files modified:
+   - `lib/db/src/schema/organizations.ts` — added `stripeCustomerId`, `stripeSubscriptionId` columns; added "monthly" and "yearly" to `subscriptionPlan` enum
+   - `artifacts/api-server/src/routes/auth.ts` — `/api/auth/me` now returns `subscriptionPlan`, `subscriptionStatus`, `trialEndsAt`
+   - `artifacts/api-server/src/routes/index.ts` — registered billing router
+   - `artifacts/souklick/src/App.tsx` — added `/upgrade` and `/billing/success` routes
+   - `artifacts/souklick/src/components/layout/sidebar.tsx` — trial users see upgrade banner above profile
+
+   **Bugs fixed during Stripe integration:**
+   - Removed invalid `customer_creation` param (only valid for payment mode, not subscription mode — caused Stripe API rejection)
+   - Made Stripe initialise lazily per-request so a missing key gives a clear error instead of crashing the module at startup
+   - Surfaced actual Stripe error messages to the frontend toast
+   - API server needed a manual restart in Replit to pick up new routes (dev script builds once, no file watcher)
+
+   **Important:** No webhook endpoint. Payment confirmation happens via redirect + session verification (`/api/billing/confirm`). Webhooks can be added later for subscription renewals/cancellations.
+
+4. **Mobile optimisation pass** — fixed responsive issues at 375px width and improved performance.
+
+   - All 11 pages now lazy-loaded via `React.lazy` + `Suspense`
+   - Mobile sidebar: slide-in drawer with hamburger button and dark overlay; closes on nav tap
+   - Mobile top bar: logo + hamburger on screens below `md` breakpoint
+   - Dashboard filter dropdowns: `w-full sm:w-[Npx]` pattern
+   - Review modal: responsive max-width
+   - Notifications select: full-width on mobile
+   - Location card stats: smaller text on mobile
+   - App layout uses `h-dvh` for correct height with dynamic browser address bar
+
+5. **Fixed horizontal overflow on mobile** — app was scrolling horizontally.
+   - Root cause 1: Dashboard had `-mx-8` negative margin making the review list 64px wider than the viewport
+   - Root cause 2: `overflow-y-auto` implicitly allows horizontal scroll (CSS spec quirk)
+   - Fix: removed `-mx-8`, added `overflow-x-hidden` to scroll container, added `overflow-x: hidden; max-width: 100vw` to `html/body` in `index.css`
+
+6. **Fixed Settings tabs overflow on mobile** — "Brand Voice", "Notifications", "Platforms" tabs overflowed the screen.
+   - Fix: `grid grid-cols-3` on mobile (equal width columns), reduced padding `px-2 sm:px-6`, hid icons below `sm` breakpoint
+
+7. **Removed motivational quote from dashboard** — user requested removal. Cleaned out the QUOTES array and the quote card block entirely.
+
+8. **Fixed dashboard filter/scroll issue on mobile** — filters took up so much vertical space that reviews were invisible.
+   - Root cause: `h-full flex flex-col` on the outer container locked the page to viewport height; the inner `flex-1 overflow-y-auto` review list had almost no room left after filters
+   - Fix: removed height trap, let the app layout's scroll container handle all scrolling naturally
+   - Also changed filters to `grid grid-cols-2` on mobile (2×2 layout) so filter section stays compact
+
+9. **Performance improvements for first load**
+   - Vite `manualChunks`: React, Radix UI, React Query, Recharts, Lucide each in separate vendor chunks for independent browser caching
+   - `QueryClient` defaults: `staleTime: 30s`, `gcTime: 5min`, `retry: 1`, `refetchOnWindowFocus: false`
+   - Prefetch Login and Dashboard chunks at module load time so they're ready when auth resolves
+
+10. **Replaced loading spinners with skeleton screens**
+    - Dashboard: 4 skeleton review cards
+    - Priority: 3 skeleton review cards
+    - Locations: 3 skeleton location cards (header, stats, actions)
+    - Analytics: full skeleton — stat cards, chart placeholder, platform breakdown
+    - Review modal: was returning `null` (blank open dialog); now shows a centred spinner
+
+**Issues discovered / notes for next session:**
+- **Stripe webhooks not set up** — subscription renewals, cancellations, and payment failures won't be handled automatically. When ready for production, add a `POST /api/billing/webhook` endpoint and configure the Stripe webhook secret (`STRIPE_WEBHOOK_SECRET`) in Replit Secrets.
+- **`framer-motion` is installed but never imported** — it's dead weight in `package.json`. Can be removed to slightly reduce install size (won't affect the bundle since it's never imported).
+- **API server has no file watcher in dev mode** — the dev script (`pnpm run dev`) builds once and starts. Any backend changes require a manual server restart in Replit. Consider adding `tsx watch` or nodemon to the dev script for a better DX.
+- **No Stripe customer portal** — users have no self-serve way to cancel, update their card, or view invoices. Next step: add a "Manage billing" button that opens a Stripe Customer Portal session.
+- **Trial expiry not enforced** — `trialEndsAt` is stored in the DB but nothing checks it or restricts access when it expires. Add middleware or a check in the frontend to prompt upgrade when trial expires.
+
+**No corrections from user this session.**

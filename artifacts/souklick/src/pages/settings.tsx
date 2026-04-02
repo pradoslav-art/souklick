@@ -19,24 +19,24 @@ export default function Settings({ tab = "brand-voice" }: SettingsProps) {
   };
 
   return (
-    <div className="p-8 max-w-5xl mx-auto">
+    <div className="p-4 sm:p-8 max-w-5xl mx-auto">
       <div className="mb-8">
         <h1 className="text-3xl font-bold tracking-tight mb-1">Organization Settings</h1>
         <p className="text-muted-foreground">Manage your brand identity, AI behavior, and account preferences.</p>
       </div>
 
       <Tabs value={tab} onValueChange={handleTabChange} className="w-full">
-        <TabsList className="mb-8 w-full md:w-auto h-auto p-1 bg-muted/50 border">
-          <TabsTrigger value="brand-voice" className="py-2.5 px-6 data-[state=active]:bg-background data-[state=active]:shadow-sm">
-            <MessageSquare className="w-4 h-4 mr-2" />
+        <TabsList className="mb-8 w-full grid grid-cols-3 md:inline-flex md:w-auto h-auto p-1 bg-muted/50 border">
+          <TabsTrigger value="brand-voice" className="py-2.5 px-2 sm:px-6 data-[state=active]:bg-background data-[state=active]:shadow-sm">
+            <MessageSquare className="w-4 h-4 mr-2 shrink-0 hidden sm:inline" />
             Brand Voice
           </TabsTrigger>
-          <TabsTrigger value="notifications" className="py-2.5 px-6 data-[state=active]:bg-background data-[state=active]:shadow-sm">
-            <Bell className="w-4 h-4 mr-2" />
+          <TabsTrigger value="notifications" className="py-2.5 px-2 sm:px-6 data-[state=active]:bg-background data-[state=active]:shadow-sm">
+            <Bell className="w-4 h-4 mr-2 shrink-0 hidden sm:inline" />
             Notifications
           </TabsTrigger>
-          <TabsTrigger value="platforms" className="py-2.5 px-6 data-[state=active]:bg-background data-[state=active]:shadow-sm">
-            <Zap className="w-4 h-4 mr-2" />
+          <TabsTrigger value="platforms" className="py-2.5 px-2 sm:px-6 data-[state=active]:bg-background data-[state=active]:shadow-sm">
+            <Zap className="w-4 h-4 mr-2 shrink-0 hidden sm:inline" />
             Platforms
           </TabsTrigger>
         </TabsList>

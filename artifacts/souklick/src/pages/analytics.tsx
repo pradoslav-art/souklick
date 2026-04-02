@@ -7,7 +7,9 @@ import {
   getGetRatingTrendQueryKey,
   getGetPlatformBreakdownQueryKey
 } from "@workspace/api-client-react";
-import { MessageSquare, Star, Reply, Clock, Loader2 } from "lucide-react";
+import { MessageSquare, Star, Reply, Clock } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { 
   LineChart, 
   Line, 
@@ -21,7 +23,7 @@ import {
   Legend
 } from "recharts";
 
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { CardTitle, CardDescription } from "@/components/ui/card";
 import { format } from "date-fns";
 
 export default function Analytics() {
@@ -50,9 +52,51 @@ export default function Analytics() {
 
   if (isLoading) {
     return (
-      <div className="p-8 h-full flex flex-col items-center justify-center text-muted-foreground">
-        <Loader2 className="w-8 h-8 animate-spin mb-4 text-primary" />
-        <p>Crunching the numbers...</p>
+      <div className="p-4 sm:p-8 max-w-7xl mx-auto space-y-8">
+        <div>
+          <Skeleton className="h-9 w-64 mb-2" />
+          <Skeleton className="h-4 w-80" />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {[...Array(4)].map((_, i) => (
+            <Card key={i} className="shadow-sm border-border">
+              <CardContent className="p-6">
+                <Skeleton className="h-12 w-12 rounded-xl mb-4" />
+                <Skeleton className="h-3 w-24 mb-2" />
+                <Skeleton className="h-8 w-20 mb-2" />
+                <Skeleton className="h-3 w-32" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <Card className="lg:col-span-2 shadow-sm border-border">
+            <CardHeader className="pb-2">
+              <Skeleton className="h-5 w-40 mb-1" />
+              <Skeleton className="h-4 w-56" />
+            </CardHeader>
+            <CardContent>
+              <Skeleton className="h-[350px] w-full rounded-lg" />
+            </CardContent>
+          </Card>
+          <Card className="shadow-sm border-border">
+            <CardHeader className="pb-2">
+              <Skeleton className="h-5 w-36 mb-1" />
+              <Skeleton className="h-4 w-48" />
+            </CardHeader>
+            <CardContent className="space-y-4 pt-2">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="space-y-1.5">
+                  <div className="flex justify-between">
+                    <Skeleton className="h-4 w-20" />
+                    <Skeleton className="h-4 w-12" />
+                  </div>
+                  <Skeleton className="h-2 w-full rounded-full" />
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        </div>
       </div>
     );
   }

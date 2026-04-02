@@ -145,7 +145,17 @@ export default function ReviewModal({ reviewId, open, onOpenChange }: ReviewModa
     );
   };
 
-  if (!review) return null;
+  if (isReviewLoading || !review) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-w-full sm:max-w-2xl md:max-w-3xl p-0 overflow-hidden gap-0 border-border mx-3 sm:mx-auto">
+          <div className="flex items-center justify-center h-64">
+            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   const isResponded = review.responseStatus === "responded";
   const isWorking = generateDraft.isPending || createDraft.isPending || updateDraft.isPending || approveResponse.isPending;

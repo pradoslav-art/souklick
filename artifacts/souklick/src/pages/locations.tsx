@@ -5,7 +5,7 @@ import {
   getGetLocationsQueryKey
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Plus, MapPin, Star, MessageSquare, ExternalLink, Loader2, Building } from "lucide-react";
+import { Plus, MapPin, Star, MessageSquare, ExternalLink, Building, Loader2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -13,6 +13,7 @@ import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Dialog,
   DialogContent,
@@ -89,9 +90,30 @@ export default function Locations() {
       </div>
 
       {isLoading ? (
-        <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
-          <Loader2 className="w-8 h-8 animate-spin mb-4 text-primary" />
-          <p>Loading locations...</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="rounded-xl border border-border bg-card overflow-hidden">
+              <div className="p-5 border-b border-border">
+                <div className="flex items-start justify-between mb-3">
+                  <Skeleton className="h-5 w-40" />
+                  <Skeleton className="h-5 w-14 rounded-full" />
+                </div>
+                <Skeleton className="h-4 w-56" />
+              </div>
+              <div className="grid grid-cols-3 divide-x border-b">
+                {[...Array(3)].map((_, j) => (
+                  <div key={j} className="p-4 flex flex-col items-center gap-2">
+                    <Skeleton className="h-3 w-12" />
+                    <Skeleton className="h-6 w-10" />
+                  </div>
+                ))}
+              </div>
+              <div className="p-4 flex gap-2">
+                <Skeleton className="h-9 flex-1 rounded-md" />
+                <Skeleton className="h-9 w-9 rounded-md" />
+              </div>
+            </div>
+          ))}
         </div>
       ) : locations?.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center border border-dashed rounded-xl bg-card/50">

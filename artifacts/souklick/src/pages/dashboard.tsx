@@ -9,11 +9,12 @@ import {
   GetReviewsPlatform,
   GetReviewsStatus
 } from "@workspace/api-client-react";
-import { Search, SlidersHorizontal, Loader2, MessageSquare, Mail } from "lucide-react";
+import { Search, SlidersHorizontal, MessageSquare, Mail, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
   SelectContent,
@@ -22,6 +23,38 @@ import {
   SelectValue
 } from "@/components/ui/select";
 import ReviewCard from "@/components/review-card";
+
+function ReviewCardSkeleton() {
+  return (
+    <div className="rounded-xl border border-border bg-card overflow-hidden">
+      <div className="flex flex-col md:flex-row">
+        <div className="md:w-[220px] p-5 border-b md:border-b-0 md:border-r border-border bg-muted/20">
+          <div className="flex items-center justify-between mb-4">
+            <Skeleton className="h-6 w-20 rounded-md" />
+          </div>
+          <div className="flex items-center gap-3 mb-4">
+            <Skeleton className="h-10 w-10 rounded-full" />
+            <div className="space-y-1.5">
+              <Skeleton className="h-3.5 w-24" />
+              <Skeleton className="h-3 w-16" />
+            </div>
+          </div>
+          <Skeleton className="h-3 w-full mb-1.5" />
+          <Skeleton className="h-3 w-3/4" />
+        </div>
+        <div className="flex-1 p-5">
+          <Skeleton className="h-3.5 w-full mb-2" />
+          <Skeleton className="h-3.5 w-5/6 mb-2" />
+          <Skeleton className="h-3.5 w-4/6 mb-6" />
+          <div className="flex items-center justify-between">
+            <Skeleton className="h-8 w-28 rounded-md" />
+            <Skeleton className="h-8 w-24 rounded-md" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function Dashboard() {
   const { toast } = useToast();
@@ -178,9 +211,8 @@ export default function Dashboard() {
 
       <div className="pb-8">
         {isLoading ? (
-          <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
-            <Loader2 className="w-8 h-8 animate-spin mb-4 text-primary" />
-            <p>Loading your reviews...</p>
+          <div className="space-y-4">
+            {[...Array(4)].map((_, i) => <ReviewCardSkeleton key={i} />)}
           </div>
         ) : filteredReviews.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center border border-dashed rounded-xl bg-card/50">

@@ -122,4 +122,37 @@ router.post("/billing/confirm", requireAuth, async (req, res): Promise<void> => 
   }
 });
 
+// Open Stripe Customer Portal for billing management (paid plans only)
+router.post("/billing/portal", requireAuth, async (req, res): Promise<void> => {
+  const [org] = await db
+    .select()
+    .from(organizationsTable)
+    .where(eq(organizationsTable.id, req.session.organizationId!));
+
+  if (!org) {
+    res.status(404).json({ error: "Organisation not found" });
+    return;
+  }
+
+  if (!org.stripeCustomerId) {
+    res.status(400).json({ error: "No billing account found. Please upgrade first." });
+    return;
+  }
+
+  const origin = req.headers.origin || "http://localhost:5173";
+
+  try {
+    const stripe = getStripe();
+    const session = await stripe.billingPortal.sessions.create({
+      customer: org.stripeCustomerId,
+      return_url: `${origin}/upgrade`,
+    });
+
+    res.json({ url: session.url });
+  } catch (err: any) {
+    console.error("Stripe portal error:", err?.message);
+    res.status(500).json({ error: err?.message || "Failed to open billing portal" });
+  }
+});
+
 export default router;

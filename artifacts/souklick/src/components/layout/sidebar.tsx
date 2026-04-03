@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, AlertCircle, MapPin, BarChart3, Settings, LogOut, ShieldCheck, Zap, X } from "lucide-react";
+import { LayoutDashboard, AlertCircle, MapPin, BarChart3, Settings, LogOut, ShieldCheck, Zap, X, CreditCard } from "lucide-react";
 import {
   useLogoutUser,
   useGetPriorityCount,
@@ -181,6 +181,10 @@ export default function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
             <DropdownMenuItem onClick={() => { setLocation("/settings"); handleNavClick(); }}>
               <Settings className="w-3.5 h-3.5 mr-2 text-muted-foreground" />
               Settings
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => { setLocation("/upgrade"); handleNavClick(); }}>
+              <CreditCard className="w-3.5 h-3.5 mr-2 text-muted-foreground" />
+              {(user as any)?.subscriptionPlan !== "trial" ? "Manage billing" : "Upgrade plan"}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:bg-destructive/10">

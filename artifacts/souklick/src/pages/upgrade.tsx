@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
-import { Check, Loader2, Zap } from "lucide-react";
+import { Check, Loader2, Zap, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { useGetCurrentUser, getGetCurrentUserQueryKey } from "@workspace/api-client-react";
 
 const FEATURES = [
   "Unlimited review monitoring",
@@ -18,7 +19,31 @@ const FEATURES = [
 export default function Upgrade() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-  const [loading, setLoading] = useState<"monthly" | "yearly" | null>(null);
+  const [loading, setLoading] = useState<"monthly" | "yearly" | "portal" | null>(null);
+  const { data: user } = useGetCurrentUser({ query: { queryKey: getGetCurrentUserQueryKey() } });
+
+  const isPaidPlan = (user as any)?.subscriptionPlan && (user as any).subscriptionPlan !== "trial";
+  const planLabel = (user as any)?.subscriptionPlan === "yearly" ? "Yearly" : "Monthly";
+
+  const handlePortal = async () => {
+    setLoading("portal");
+    try {
+      const res = await fetch("/api/billing/portal", {
+        method: "POST",
+        credentials: "include",
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || "Failed to open billing portal");
+      window.location.href = data.url;
+    } catch (err: any) {
+      toast({
+        title: "Could not open billing portal",
+        description: err?.message || "Please try again.",
+        variant: "destructive",
+      });
+      setLoading(null);
+    }
+  };
 
   const handleCheckout = async (plan: "monthly" | "yearly") => {
     setLoading(plan);
@@ -46,6 +71,42 @@ export default function Upgrade() {
       setLoading(null);
     }
   };
+
+  if (isPaidPlan) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center px-4 py-16">
+        <div className="max-w-md w-full text-center">
+          <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-3 py-1.5 rounded-full text-sm font-medium mb-6">
+            <CreditCard className="w-3.5 h-3.5" />
+            Billing
+          </div>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground mb-2">
+            You're on the {planLabel} plan
+          </h1>
+          <p className="text-muted-foreground text-sm mb-8">
+            Manage your subscription, update your payment method, or view invoices via the Stripe billing portal.
+          </p>
+          <Button
+            className="w-full mb-4"
+            onClick={handlePortal}
+            disabled={loading === "portal"}
+          >
+            {loading === "portal" ? (
+              <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Opening portal…</>
+            ) : (
+              <><CreditCard className="w-4 h-4 mr-2" /> Manage billing</>
+            )}
+          </Button>
+          <button
+            onClick={() => setLocation("/")}
+            className="text-sm text-muted-foreground hover:text-foreground underline-offset-4 hover:underline"
+          >
+            Back to dashboard
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center px-4 py-16">

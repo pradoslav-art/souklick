@@ -315,6 +315,25 @@ Your job is to be the developer they would hire if they could afford a great one
 - **`framer-motion` is installed but never imported** — it's dead weight in `package.json`. Can be removed to slightly reduce install size (won't affect the bundle since it's never imported).
 - **API server has no file watcher in dev mode** — the dev script (`pnpm run dev`) builds once and starts. Any backend changes require a manual server restart in Replit. Consider adding `tsx watch` or nodemon to the dev script for a better DX.
 - **No Stripe customer portal** — users have no self-serve way to cancel, update their card, or view invoices. Next step: add a "Manage billing" button that opens a Stripe Customer Portal session.
-- **Trial expiry not enforced** — `trialEndsAt` is stored in the DB but nothing checks it or restricts access when it expires. Add middleware or a check in the frontend to prompt upgrade when trial expires.
 
 **No corrections from user this session.**
+
+---
+
+### Session: 2026-04-03
+
+**What we did:**
+
+1. **Enforced trial expiry** — users on an expired trial can no longer access the app or API.
+
+   Files modified:
+   - `artifacts/api-server/src/middlewares/auth.ts` — added `requireActiveSubscription` middleware. Queries org from DB; returns 402 `trial_expired` if plan is "trial" and `trialEndsAt` is in the past; returns 402 `subscription_inactive` if paid plan has status other than "active".
+   - `artifacts/api-server/src/routes/index.ts` — wired `requireActiveSubscription` between auth/billing routes and all business routes (organizations, locations, reviews, responses, ai, analytics, notifications).
+   - `artifacts/souklick/src/App.tsx` — `ProtectedRoute` now checks for expired trial on user load and redirects to `/upgrade`. Exempt paths: `/upgrade`, `/billing/success`, `/settings`, `/admin`.
+   - `artifacts/souklick/src/components/layout/sidebar.tsx` — trial banner now shows days remaining (e.g. "5 days left in trial"). When expired, switches to red "Trial expired / Upgrade now" state.
+
+**Pending items for next session:**
+- Stripe webhooks (renewals, cancellations, payment failures)
+- Stripe Customer Portal (self-serve billing management)
+- `framer-motion` dead dependency can be removed
+- API server dev mode has no file watcher (requires manual restart in Replit)

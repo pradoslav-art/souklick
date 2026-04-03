@@ -11,13 +11,18 @@ import notificationsRouter from "./notifications";
 import testEmailRouter from "./test-email";
 import adminRouter from "./admin";
 import billingRouter from "./billing";
+import { requireActiveSubscription } from "../middlewares/auth";
 
 const router: IRouter = Router();
 
+// Unprotected — no subscription check
 router.use(adminRouter);
 router.use(billingRouter);
 router.use(healthRouter);
 router.use(authRouter);
+
+// All routes below require an active subscription (or unexpired trial)
+router.use(requireActiveSubscription);
 router.use(organizationsRouter);
 router.use(locationsRouter);
 router.use(reviewsRouter);

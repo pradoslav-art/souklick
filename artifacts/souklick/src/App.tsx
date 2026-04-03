@@ -44,6 +44,14 @@ function PageLoader() {
   );
 }
 
+const TRIAL_EXEMPT_PATHS = ["/upgrade", "/billing/success", "/settings", "/admin"];
+
+function isTrialExpired(user: any): boolean {
+  if (!user || user.subscriptionPlan !== "trial") return false;
+  if (!user.trialEndsAt) return false;
+  return new Date(user.trialEndsAt) < new Date();
+}
+
 function ProtectedRoute({ component: Component, ...rest }: { component: any, [key: string]: any }) {
   const { data: user, isLoading, error } = useGetCurrentUser({ query: { queryKey: getGetCurrentUserQueryKey() } });
   const [location, setLocation] = useLocation();
@@ -53,6 +61,15 @@ function ProtectedRoute({ component: Component, ...rest }: { component: any, [ke
       setLocation("/login");
     }
   }, [isLoading, error, setLocation]);
+
+  useEffect(() => {
+    if (!isLoading && user && isTrialExpired(user as any)) {
+      const exempt = TRIAL_EXEMPT_PATHS.some(p => location === p || location.startsWith(p + "/"));
+      if (!exempt) {
+        setLocation("/upgrade");
+      }
+    }
+  }, [isLoading, user, location, setLocation]);
 
   if (isLoading) {
     return <PageLoader />;

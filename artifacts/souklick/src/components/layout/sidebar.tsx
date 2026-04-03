@@ -125,21 +125,34 @@ export default function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
       </nav>
 
       {/* Upgrade banner for trial users */}
-      {(user as any)?.subscriptionPlan === "trial" && (
-        <div className="px-3 pb-2">
-          <Link href="/upgrade" onClick={handleNavClick}>
-            <div className="bg-primary/10 hover:bg-primary/15 transition-colors rounded-xl px-3 py-3 cursor-pointer">
-              <div className="flex items-center gap-2 mb-1">
-                <Zap className="w-3.5 h-3.5 text-primary" />
-                <span className="text-[12px] font-semibold text-primary">You're on a free trial</span>
+      {(user as any)?.subscriptionPlan === "trial" && (() => {
+        const trialEndsAt = (user as any)?.trialEndsAt ? new Date((user as any).trialEndsAt) : null;
+        const now = new Date();
+        const expired = trialEndsAt ? trialEndsAt < now : false;
+        const daysLeft = trialEndsAt && !expired
+          ? Math.ceil((trialEndsAt.getTime() - now.getTime()) / 86_400_000)
+          : 0;
+
+        return (
+          <div className="px-3 pb-2">
+            <Link href="/upgrade" onClick={handleNavClick}>
+              <div className={`${expired ? "bg-destructive/10 hover:bg-destructive/15" : "bg-primary/10 hover:bg-primary/15"} transition-colors rounded-xl px-3 py-3 cursor-pointer`}>
+                <div className="flex items-center gap-2 mb-1">
+                  <Zap className={`w-3.5 h-3.5 ${expired ? "text-destructive" : "text-primary"}`} />
+                  <span className={`text-[12px] font-semibold ${expired ? "text-destructive" : "text-primary"}`}>
+                    {expired ? "Trial expired" : `${daysLeft} day${daysLeft === 1 ? "" : "s"} left in trial`}
+                  </span>
+                </div>
+                <p className={`text-[11px] leading-snug ${expired ? "text-destructive/70" : "text-primary/70"}`}>
+                  {expired
+                    ? "Upgrade now to restore access."
+                    : "Upgrade to keep full access. Plans from $29/month."}
+                </p>
               </div>
-              <p className="text-[11px] text-primary/70 leading-snug">
-                Upgrade to keep full access. Plans from $29/month.
-              </p>
-            </div>
-          </Link>
-        </div>
-      )}
+            </Link>
+          </div>
+        );
+      })()}
 
       {/* User */}
       <div className="px-3 pb-4 pt-2 border-t border-sidebar-border">

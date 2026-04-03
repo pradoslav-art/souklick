@@ -23,7 +23,8 @@
       "Bash(pnpm typecheck:*)",
       "Bash(node -e \"const s = require\\('/home/runner/workspace/node_modules/stripe'\\); console.log\\(s.LATEST_API_VERSION || 'check types'\\)\")",
       "Bash(xargs ls:*)",
-      "Bash(npx vite:*)"
+      "Bash(npx vite:*)",
+      "Bash(pnpm remove:*)"
     ]
   }
 }

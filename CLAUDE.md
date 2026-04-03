@@ -337,3 +337,32 @@ Your job is to be the developer they would hire if they could afford a great one
 - Stripe Customer Portal (self-serve billing management)
 - `framer-motion` dead dependency can be removed
 - API server dev mode has no file watcher (requires manual restart in Replit)
+
+---
+
+### Session: 2026-04-04
+
+**What we did:**
+
+1. **Added Stripe webhook endpoint** — app now handles subscription lifecycle events automatically.
+
+   Files modified:
+   - `artifacts/api-server/src/routes/billing.ts` — added exported `webhookHandler` function handling 3 events: `customer.subscription.updated` (syncs status), `customer.subscription.deleted` (sets cancelled), `invoice.payment_failed` (sets past_due)
+   - `artifacts/api-server/src/app.ts` — registered `POST /api/billing/webhook` with `express.raw()` before `express.json()` middleware (required for Stripe signature verification)
+
+   User configured the webhook in Stripe dashboard and set `STRIPE_WEBHOOK_SECRET` in Replit Secrets. Endpoint shows as active in Stripe.
+
+   **Note:** Stripe's browser-based "Send test webhook" no longer works without the CLI for this endpoint type. Real-world events will be the proof of operation.
+
+2. **Removed `framer-motion` dead dependency** — was installed but never imported anywhere. Removed from `artifacts/souklick/package.json`.
+
+3. **Added nodemon file watcher to API server dev mode** — backend changes now auto-rebuild and restart without needing a manual server restart in Replit.
+
+   Files modified:
+   - `artifacts/api-server/package.json` — updated `dev` script to use nodemon watching `src/` directory; added `nodemon` as devDependency
+
+   **To activate:** stop and restart the API server in Replit once to pick up the new dev script.
+
+**No pending items — all backlog items cleared.**
+
+**No corrections from user this session.**

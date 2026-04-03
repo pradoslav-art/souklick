@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { Router, type Request, type Response } from "express";
 import Stripe from "stripe";
 import { db, organizationsTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
@@ -154,5 +154,73 @@ router.post("/billing/portal", requireAuth, async (req, res): Promise<void> => {
     res.status(500).json({ error: err?.message || "Failed to open billing portal" });
   }
 });
+
+// Stripe webhook handler — must receive raw body (registered before express.json() in app.ts)
+export async function webhookHandler(req: Request, res: Response): Promise<void> {
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+  if (!webhookSecret) {
+    console.error("STRIPE_WEBHOOK_SECRET is not set");
+    res.status(500).json({ error: "Webhook secret not configured" });
+    return;
+  }
+
+  const sig = req.headers["stripe-signature"];
+  if (!sig) {
+    res.status(400).json({ error: "Missing stripe-signature header" });
+    return;
+  }
+
+  let event: Stripe.Event;
+  try {
+    const stripe = getStripe();
+    event = stripe.webhooks.constructEvent(req.body as Buffer, sig, webhookSecret);
+  } catch (err: any) {
+    console.error("Webhook signature verification failed:", err?.message);
+    res.status(400).json({ error: "Invalid webhook signature" });
+    return;
+  }
+
+  try {
+    switch (event.type) {
+      case "customer.subscription.updated": {
+        const sub = event.data.object as Stripe.Subscription;
+        const status =
+          sub.status === "active" ? "active" :
+          sub.status === "past_due" ? "past_due" :
+          "cancelled";
+        await db
+          .update(organizationsTable)
+          .set({ subscriptionStatus: status })
+          .where(eq(organizationsTable.stripeCustomerId, sub.customer as string));
+        break;
+      }
+      case "customer.subscription.deleted": {
+        const sub = event.data.object as Stripe.Subscription;
+        await db
+          .update(organizationsTable)
+          .set({ subscriptionStatus: "cancelled" })
+          .where(eq(organizationsTable.stripeCustomerId, sub.customer as string));
+        break;
+      }
+      case "invoice.payment_failed": {
+        const invoice = event.data.object as Stripe.Invoice;
+        await db
+          .update(organizationsTable)
+          .set({ subscriptionStatus: "past_due" })
+          .where(eq(organizationsTable.stripeCustomerId, invoice.customer as string));
+        break;
+      }
+      default:
+        // Ignore other event types
+        break;
+    }
+  } catch (err: any) {
+    console.error("Webhook DB update failed:", err?.message);
+    res.status(500).json({ error: "Failed to process webhook" });
+    return;
+  }
+
+  res.json({ received: true });
+}
 
 export default router;

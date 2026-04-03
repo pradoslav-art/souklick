@@ -5,6 +5,7 @@ import session from "express-session";
 import connectPgSimple from "connect-pg-simple";
 import { pool } from "@workspace/db";
 import router from "./routes";
+import { webhookHandler } from "./routes/billing";
 import { logger } from "./lib/logger";
 
 const app: Express = express();
@@ -29,6 +30,10 @@ app.use(
   }),
 );
 app.use(cors({ origin: true, credentials: true }));
+
+// Stripe webhook must receive raw body — register before express.json()
+app.post("/api/billing/webhook", express.raw({ type: "application/json" }), webhookHandler);
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

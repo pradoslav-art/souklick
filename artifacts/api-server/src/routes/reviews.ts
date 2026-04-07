@@ -1,7 +1,8 @@
 import { Router, type IRouter } from "express";
-import { eq, and, lte, desc, asc, sql, count, inArray } from "drizzle-orm";
-import { db, reviewsTable, locationsTable, responsesTable } from "@workspace/db";
+import { eq, and, lte, gte, desc, asc, sql, count, inArray } from "drizzle-orm";
+import { db, reviewsTable, locationsTable, responsesTable, usersTable } from "@workspace/db";
 import { requireAuth } from "../middlewares/auth";
+import { sendReviewAlerts } from "../lib/email";
 
 const router: IRouter = Router();
 
@@ -149,15 +150,46 @@ router.post("/reviews", requireAuth, async (req, res): Promise<void> => {
     return;
   }
 
+  const ratingNum = parseInt(String(rating), 10);
+
   const [review] = await db.insert(reviewsTable).values({
     locationId,
     platform,
     platformReviewId: `manual-${crypto.randomUUID()}`,
     reviewerName,
-    rating: parseInt(String(rating), 10),
+    rating: ratingNum,
     reviewText,
     reviewDate: reviewDate ? new Date(reviewDate) : new Date(),
   }).returning();
+
+  // Send email alerts to org users who have email notifications on and rating meets their threshold
+  try {
+    const recipients = await db
+      .select({ email: usersTable.email })
+      .from(usersTable)
+      .where(
+        and(
+          eq(usersTable.organizationId, location.organizationId),
+          eq(usersTable.notificationEmail, true),
+          gte(usersTable.notificationMinRating, ratingNum)
+        )
+      );
+
+    if (recipients.length > 0) {
+      const origin = req.headers.origin || process.env.APP_URL || "http://localhost:5173";
+      sendReviewAlerts({
+        to: recipients.map((r) => r.email),
+        reviewerName,
+        rating: ratingNum,
+        reviewText: reviewText ?? null,
+        locationName: location.name,
+        platform,
+        appUrl: origin,
+      }).catch((err) => console.error("Email alert failed:", err?.message));
+    }
+  } catch (err: any) {
+    console.error("Email alert query failed:", err?.message);
+  }
 
   res.status(201).json(formatReview(review, location.name));
 });

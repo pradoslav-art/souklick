@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { Link } from "wouter";
-import { Shield, Bell, MessageSquare, Zap } from "lucide-react";
+import { Shield, Bell, MessageSquare, Zap, CreditCard } from "lucide-react";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import BrandVoiceSettings from "./settings/brand-voice";
 import NotificationSettings from "./settings/notifications";
+import BillingSettings from "./settings/billing";
 
 interface SettingsProps {
   tab?: string;
@@ -26,7 +27,7 @@ export default function Settings({ tab = "brand-voice" }: SettingsProps) {
       </div>
 
       <Tabs value={tab} onValueChange={handleTabChange} className="w-full">
-        <TabsList className="mb-8 w-full grid grid-cols-3 md:inline-flex md:w-auto h-auto p-1 bg-muted/50 border">
+        <TabsList className="mb-8 w-full grid grid-cols-2 sm:grid-cols-4 md:inline-flex md:w-auto h-auto p-1 bg-muted/50 border">
           <TabsTrigger value="brand-voice" className="py-2.5 px-2 sm:px-6 data-[state=active]:bg-background data-[state=active]:shadow-sm">
             <MessageSquare className="w-4 h-4 mr-2 shrink-0 hidden sm:inline" />
             Brand Voice
@@ -39,6 +40,10 @@ export default function Settings({ tab = "brand-voice" }: SettingsProps) {
             <Zap className="w-4 h-4 mr-2 shrink-0 hidden sm:inline" />
             Platforms
           </TabsTrigger>
+          <TabsTrigger value="billing" className="py-2.5 px-2 sm:px-6 data-[state=active]:bg-background data-[state=active]:shadow-sm">
+            <CreditCard className="w-4 h-4 mr-2 shrink-0 hidden sm:inline" />
+            Billing
+          </TabsTrigger>
         </TabsList>
 
         <div className="bg-card border border-border rounded-xl shadow-sm overflow-hidden">
@@ -47,6 +52,9 @@ export default function Settings({ tab = "brand-voice" }: SettingsProps) {
           </TabsContent>
           <TabsContent value="notifications" className="m-0 p-0 outline-none">
             <NotificationSettings />
+          </TabsContent>
+          <TabsContent value="billing" className="m-0 p-0 outline-none">
+            <BillingSettings />
           </TabsContent>
           <TabsContent value="platforms" className="m-0 p-8 outline-none text-center">
             <div className="py-12 flex flex-col items-center">

@@ -1,5 +1,6 @@
 import { Router, type IRouter } from "express";
 import { eq, and, count, sql, gte, lt, desc, isNotNull } from "drizzle-orm";
+import Stripe from "stripe";
 import {
   db,
   usersTable,
@@ -326,6 +327,54 @@ router.get("/admin/export/activity", requireAdmin, async (_req, res): Promise<vo
   res.setHeader("Content-Type", "text/csv");
   res.setHeader("Content-Disposition", "attachment; filename=activity.csv");
   res.send(header + csvRows.join("\n"));
+});
+
+// ─── GET /api/admin/revenue ───────────────────────────────────────────────
+router.get("/admin/revenue", requireAdmin, async (_req, res): Promise<void> => {
+  const key = process.env.STRIPE_SECRET_KEY;
+  if (!key) {
+    res.status(500).json({ error: "STRIPE_SECRET_KEY not set" });
+    return;
+  }
+
+  const stripe = new Stripe(key, { apiVersion: "2026-03-25.dahlia" });
+  const now = new Date();
+  const startOfMonth = Math.floor(new Date(now.getFullYear(), now.getMonth(), 1).getTime() / 1000);
+
+  try {
+    const [subscriptions, invoicesThisMonth, recentInvoices] = await Promise.all([
+      stripe.subscriptions.list({ status: "active", limit: 100 }),
+      stripe.invoices.list({ status: "paid", created: { gte: startOfMonth }, limit: 100 }),
+      stripe.invoices.list({ status: "paid", limit: 10 }),
+    ]);
+
+    // MRR: sum monthly value of every active subscription
+    const mrr = subscriptions.data.reduce((sum, sub) => {
+      const item = sub.items.data[0];
+      if (!item) return sum;
+      const cents = item.price.unit_amount ?? 0;
+      const interval = item.price.recurring?.interval;
+      return sum + (interval === "year" ? cents / 12 : cents) / 100;
+    }, 0);
+
+    const revenueThisMonth = invoicesThisMonth.data.reduce(
+      (sum, inv) => sum + (inv.amount_paid ?? 0) / 100, 0
+    );
+
+    const transactions = recentInvoices.data.map((inv) => ({
+      id: inv.id,
+      amount: (inv.amount_paid ?? 0) / 100,
+      currency: inv.currency.toUpperCase(),
+      date: inv.created,
+      customerEmail: inv.customer_email ?? "—",
+      description: inv.lines.data[0]?.description ?? "Subscription",
+    }));
+
+    res.json({ mrr, revenueThisMonth, transactions });
+  } catch (err: any) {
+    console.error("Stripe revenue error:", err?.message);
+    res.status(500).json({ error: err?.message || "Failed to fetch revenue data" });
+  }
 });
 
 export default router;

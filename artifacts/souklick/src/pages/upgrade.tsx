@@ -34,7 +34,7 @@ export default function Upgrade() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error || "Failed to open billing portal");
-      window.location.href = data.url;
+      window.open(data.url, "_blank");
     } catch (err: any) {
       toast({
         title: "Could not open billing portal",

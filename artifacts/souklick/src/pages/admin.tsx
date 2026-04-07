@@ -129,6 +129,13 @@ export default function AdminDashboard() {
     retry: false,
   });
 
+  const { data: revenue, isLoading: loadingRevenue } = useQuery({
+    queryKey: ["admin-revenue"],
+    queryFn: () => adminFetch("/admin/revenue"),
+    refetchInterval: 60_000,
+    retry: false,
+  });
+
   // ── Access denied ───────────────────────────────────────────────────────
   if (statsError && (statsError as any).status === 403) {
     return (
@@ -301,12 +308,58 @@ export default function AdminDashboard() {
             <StatCard key={p.plan} label={`${p.plan} plan`} value={p.count} />
           ))}
         </div>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <PlaceholderCard title="Total Revenue" reason="Needs Stripe / payment integration." />
-          <PlaceholderCard title="Revenue This Month" reason="Needs Stripe / payment integration." />
-          <PlaceholderCard title="Revenue This Week" reason="Needs Stripe / payment integration." />
-          <PlaceholderCard title="Recent Transactions" reason="Needs Stripe / payment integration." />
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+          <StatCard
+            label="MRR"
+            value={loadingRevenue ? "…" : revenue?.mrr != null ? `$${revenue.mrr.toFixed(0)}` : "—"}
+            sub="Monthly recurring revenue"
+            color="text-green-600"
+            icon={TrendingUp}
+          />
+          <StatCard
+            label="Revenue This Month"
+            value={loadingRevenue ? "…" : revenue?.revenueThisMonth != null ? `$${revenue.revenueThisMonth.toFixed(0)}` : "—"}
+            sub="Paid invoices this month"
+            icon={Activity}
+          />
         </div>
+
+        {/* Recent transactions */}
+        <Card>
+          <CardHeader><CardTitle className="text-sm font-semibold">Recent Transactions</CardTitle></CardHeader>
+          <CardContent>
+            {loadingRevenue ? (
+              <div className="flex justify-center py-8"><Loader2 className="w-5 h-5 animate-spin text-muted-foreground" /></div>
+            ) : !revenue?.transactions?.length ? (
+              <p className="text-sm text-muted-foreground py-4 text-center">No paid invoices yet.</p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b text-xs text-muted-foreground">
+                      <th className="text-left pb-2 pr-4 font-medium">Customer</th>
+                      <th className="text-left pb-2 pr-4 font-medium">Description</th>
+                      <th className="text-left pb-2 pr-4 font-medium">Amount</th>
+                      <th className="text-left pb-2 font-medium">Date</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {revenue.transactions.map((t: any) => (
+                      <tr key={t.id} className="border-b last:border-0 hover:bg-muted/30">
+                        <td className="py-2 pr-4 text-muted-foreground text-xs">{t.customerEmail}</td>
+                        <td className="py-2 pr-4 text-xs max-w-[200px] truncate">{t.description}</td>
+                        <td className="py-2 pr-4 font-semibold text-green-600">${t.amount.toFixed(2)}</td>
+                        <td className="py-2 text-xs text-muted-foreground">
+                          {format(new Date(t.date * 1000), "MMM d, yyyy")}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </section>
 
       {/* ── Retention & Engagement ── */}

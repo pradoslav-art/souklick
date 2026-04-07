@@ -9,7 +9,7 @@ import {
   GetReviewsPlatform,
   GetReviewsStatus
 } from "@workspace/api-client-react";
-import { Search, SlidersHorizontal, MessageSquare, Mail, Loader2 } from "lucide-react";
+import { Search, SlidersHorizontal, MessageSquare, Mail, Loader2, MapPin } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 import { Input } from "@/components/ui/input";
@@ -100,6 +100,7 @@ export default function Dashboard() {
   });
 
   const reviews = reviewData?.reviews || [];
+  const hasActiveFilters = platform !== "all" || locationId !== "all" || rating !== "all" || status !== "all" || !!search;
 
   const filteredReviews = useMemo(() => {
     if (!search) return reviews;
@@ -215,13 +216,31 @@ export default function Dashboard() {
             {[...Array(4)].map((_, i) => <ReviewCardSkeleton key={i} />)}
           </div>
         ) : filteredReviews.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-center border border-dashed rounded-xl bg-card/50">
-            <MessageSquare className="w-12 h-12 text-muted-foreground/50 mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No reviews found</h3>
-            <p className="text-muted-foreground max-w-md">
-              We couldn't find any reviews matching your current filters. Try adjusting your search or clearing filters.
-            </p>
-            {(platform !== "all" || locationId !== "all" || rating !== "all" || status !== "all" || search) && (
+          !hasActiveFilters ? (
+            // New user — no reviews at all
+            <div className="flex flex-col items-center justify-center py-20 text-center border border-dashed rounded-xl bg-card/50">
+              <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-5">
+                <MessageSquare className="w-8 h-8 text-primary" />
+              </div>
+              <h3 className="text-xl font-bold mb-2">Your inbox is empty</h3>
+              <p className="text-muted-foreground max-w-sm mb-8">
+                Reviews will appear here once your locations are connected. Start by adding your first location.
+              </p>
+              <Link href="/locations">
+                <Button className="gap-2">
+                  <MapPin className="w-4 h-4" />
+                  Add a location
+                </Button>
+              </Link>
+            </div>
+          ) : (
+            // Filters returned nothing
+            <div className="flex flex-col items-center justify-center py-20 text-center border border-dashed rounded-xl bg-card/50">
+              <MessageSquare className="w-12 h-12 text-muted-foreground/50 mb-4" />
+              <h3 className="text-lg font-semibold mb-2">No reviews found</h3>
+              <p className="text-muted-foreground max-w-md">
+                No reviews match your current filters. Try adjusting your search or clearing filters.
+              </p>
               <Button
                 variant="outline"
                 className="mt-6"
@@ -235,8 +254,8 @@ export default function Dashboard() {
               >
                 Clear all filters
               </Button>
-            )}
-          </div>
+            </div>
+          )
         ) : (
           <div className="space-y-4">
             {filteredReviews.map((review) => (

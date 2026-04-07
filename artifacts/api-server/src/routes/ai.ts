@@ -94,7 +94,7 @@ Write only the response text, nothing else.`;
     const [response] = await db.insert(responsesTable).values({
       reviewId,
       draftText,
-      draftedBy: null,
+      draftedBy: req.session.userId ?? null,
     }).returning();
 
     await db.update(reviewsTable).set({ responseStatus: "draft_saved" }).where(eq(reviewsTable.id, reviewId));

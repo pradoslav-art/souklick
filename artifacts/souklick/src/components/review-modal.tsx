@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
-import { Bot, Save, Send, Loader2, RefreshCw, X, AlertCircle, CheckCircle } from "lucide-react";
+import { Bot, Save, Check, Loader2, RefreshCw, AlertCircle, CheckCircle, Copy } from "lucide-react";
 import { 
   useGetReview, 
   useGenerateAiResponse,
@@ -37,6 +37,8 @@ export default function ReviewModal({ reviewId, open, onOpenChange }: ReviewModa
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [draftText, setDraftText] = useState("");
+  const [userNotes, setUserNotes] = useState("");
+  const [copied, setCopied] = useState(false);
   
   // Queries
   const { data: review, isLoading: isReviewLoading } = useGetReview(reviewId, {
@@ -57,11 +59,20 @@ export default function ReviewModal({ reviewId, open, onOpenChange }: ReviewModa
     } else {
       setDraftText("");
     }
+    setUserNotes("");
+    setCopied(false);
   }, [activeResponse, open]);
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(draftText).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
 
   const handleGenerate = () => {
     generateDraft.mutate(
-      { data: { reviewId } },
+      { data: { reviewId, userNotes: userNotes.trim() || undefined } },
       {
         onSuccess: (data) => {
           setDraftText(data.draftText);
@@ -128,18 +139,17 @@ export default function ReviewModal({ reviewId, open, onOpenChange }: ReviewModa
       { id, data: { finalText: text } },
       {
         onSuccess: () => {
-          toast({ 
-            title: "Response Published", 
-            description: "Successfully posted to the platform.",
+          toast({
+            title: "Response Approved",
+            description: "Marked as responded. Copy the text and post it on the platform.",
             className: "bg-green-50 border-green-200"
           });
           queryClient.invalidateQueries({ queryKey: getGetReviewQueryKey(reviewId) });
           queryClient.invalidateQueries({ queryKey: getGetReviewsQueryKey() });
           queryClient.invalidateQueries({ queryKey: getGetPriorityCountQueryKey() });
-          setTimeout(() => onOpenChange(false), 1500);
         },
         onError: () => {
-          toast({ variant: "destructive", title: "Publishing Failed", description: "Could not post to the platform." });
+          toast({ variant: "destructive", title: "Failed to approve", description: "Something went wrong. Please try again." });
         }
       }
     );
@@ -201,27 +211,53 @@ export default function ReviewModal({ reviewId, open, onOpenChange }: ReviewModa
             </div>
           </div>
 
+          {!isResponded && (
+            <div className="mb-5">
+              <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-wider mb-2">Notes for AI <span className="normal-case font-normal text-muted-foreground/70">(optional)</span></h3>
+              <Textarea
+                className="min-h-[60px] text-sm resize-none bg-background focus-visible:ring-primary/20"
+                placeholder="e.g. mention we fixed the issue, offer a free dessert on next visit…"
+                value={userNotes}
+                onChange={(e) => setUserNotes(e.target.value)}
+                disabled={isWorking}
+              />
+            </div>
+          )}
+
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-wider">Your Response</h3>
-              {!isResponded && (
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="h-8 gap-1.5 text-primary border-primary/20 hover:bg-primary/5"
-                  onClick={handleGenerate}
-                  disabled={isWorking}
-                >
-                  {generateDraft.isPending ? (
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  ) : draftText ? (
-                    <RefreshCw className="w-3.5 h-3.5" />
-                  ) : (
-                    <Bot className="w-3.5 h-3.5" />
-                  )}
-                  {draftText ? "Regenerate AI Draft" : "Generate AI Draft"}
-                </Button>
-              )}
+              <div className="flex items-center gap-2">
+                {draftText && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 gap-1.5"
+                    onClick={handleCopy}
+                  >
+                    {copied ? <Check className="w-3.5 h-3.5 text-green-600" /> : <Copy className="w-3.5 h-3.5" />}
+                    {copied ? "Copied!" : "Copy"}
+                  </Button>
+                )}
+                {!isResponded && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 gap-1.5 text-primary border-primary/20 hover:bg-primary/5"
+                    onClick={handleGenerate}
+                    disabled={isWorking}
+                  >
+                    {generateDraft.isPending ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : draftText ? (
+                      <RefreshCw className="w-3.5 h-3.5" />
+                    ) : (
+                      <Bot className="w-3.5 h-3.5" />
+                    )}
+                    {draftText ? "Regenerate AI Draft" : "Generate AI Draft"}
+                  </Button>
+                )}
+              </div>
             </div>
 
             <Textarea
@@ -232,17 +268,17 @@ export default function ReviewModal({ reviewId, open, onOpenChange }: ReviewModa
               disabled={isResponded || isWorking}
             />
 
-            {isResponded && activeResponse?.status === "posted" && (
+            {isResponded && (
               <div className="flex items-center gap-2 text-sm text-green-600 font-medium bg-green-50 p-3 rounded-lg border border-green-200">
-                <CheckCircle className="w-5 h-5" />
-                This response has been successfully published to {review.platform}.
+                <CheckCircle className="w-5 h-5 shrink-0" />
+                Response approved. Copy the text above and post it on {review.platform}.
               </div>
             )}
-            
+
             {activeResponse?.status === "failed" && (
               <div className="flex items-center gap-2 text-sm text-destructive font-medium bg-destructive/10 p-3 rounded-lg border border-destructive/20">
                 <AlertCircle className="w-5 h-5" />
-                Failed to publish. Please check your integration settings and try again.
+                Something went wrong. Please try again.
               </div>
             )}
           </div>
@@ -267,7 +303,7 @@ export default function ReviewModal({ reviewId, open, onOpenChange }: ReviewModa
                 )}
                 Save Draft
               </Button>
-              <Button 
+              <Button
                 onClick={handleApprove}
                 disabled={!draftText.trim() || isWorking}
                 className="gap-2 font-semibold shadow-md"
@@ -275,12 +311,12 @@ export default function ReviewModal({ reviewId, open, onOpenChange }: ReviewModa
                 {approveResponse.isPending ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    Publishing...
+                    Saving...
                   </>
                 ) : (
                   <>
-                    <Send className="w-4 h-4" />
-                    Approve & Publish
+                    <Check className="w-4 h-4" />
+                    Approve Response
                   </>
                 )}
               </Button>

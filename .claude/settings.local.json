@@ -24,7 +24,9 @@
       "Bash(node -e \"const s = require\\('/home/runner/workspace/node_modules/stripe'\\); console.log\\(s.LATEST_API_VERSION || 'check types'\\)\")",
       "Bash(xargs ls:*)",
       "Bash(npx vite:*)",
-      "Bash(pnpm remove:*)"
+      "Bash(pnpm remove:*)",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(json.dumps\\(d.get\\('exports', {}\\), indent=2\\)\\)\")",
+      "Bash(node:*)"
     ]
   }
 }

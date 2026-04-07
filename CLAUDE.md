@@ -366,3 +366,73 @@ Your job is to be the developer they would hire if they could afford a great one
 **No pending items — all backlog items cleared.**
 
 **No corrections from user this session.**
+
+---
+
+### Session: 2026-04-07
+
+**What we did:**
+
+1. **Added trial expiry warning emails** — users on trial plans now get automated warnings before their access ends.
+
+   Files created:
+   - `artifacts/api-server/src/lib/trial-warnings.ts` — `checkAndSendTrialWarnings()` queries orgs with `subscriptionPlan = 'trial'` whose `trialEndsAt` falls within a ±12h window around 3 days or 1 day from now. Sends to all users in each org. No DB changes needed — time windows naturally deduplicate.
+
+   Files modified:
+   - `artifacts/api-server/src/lib/email.ts` — added `sendTrialWarningEmail({ to, fullName, daysLeft })`. Branded HTML template; urgency colour changes (amber → red) for 1-day warning. CTA button links to `/upgrade`.
+   - `artifacts/api-server/src/index.ts` — scheduler fires 1 minute after server startup, then every 24 hours. Errors are caught and logged without crashing the server.
+
+2. **Added filters to Location Detail page** — users can now filter the review list by platform, rating, and status.
+
+   Files modified:
+   - `artifacts/souklick/src/pages/location-detail.tsx` — added Platform / Rating / Status dropdowns in a filter bar above the review list. A "Clear" button appears when any filter is active. Empty state message changes to "No reviews match these filters" with a clear link when filters are on.
+
+3. **Fixed Settings default tab** — opening `/settings` now lands on the Profile tab instead of Brand Voice.
+
+   Files modified:
+   - `artifacts/souklick/src/pages/settings.tsx` — default prop changed from `"brand-voice"` to `"profile"`.
+
+4. **Removed dead test-email router** — cleaned up leftover import and registration in `routes/index.ts`.
+
+5. **Fixed pre-existing TypeScript error in `team.ts`** — `req.params` destructuring caused a type mismatch with Drizzle's `eq()`. Fixed with explicit string cast.
+
+**No corrections from user this session.**
+
+---
+
+### Session: 2026-04-07 (continued)
+
+**What we did:**
+
+1. **Fixed review response flow** — four issues resolved in `review-modal.tsx` and `ai.ts`:
+   - Removed misleading "Successfully posted to the platform" language. Toast and banner now say "Approved — copy and post on [platform]."
+   - Added optional **Notes for AI** textarea. Managers can give context before generating (e.g. "mention we fixed the issue"). Notes are passed to the AI prompt via `userNotes`.
+   - Added **Copy button** next to the response textarea (shows tick + "Copied!" for 2s).
+   - Renamed "Approve & Publish" → "Approve Response".
+   - Fixed `draftedBy: null` in `ai.ts` — now stores `req.session.userId`.
+
+2. **Built review request feature** — users can now email customers a direct link to leave a review.
+
+   Files created:
+   - `lib/db/src/schema/review-requests.ts` — new `review_requests` table (id, orgId, locationId, customerName, customerEmail, platform, sentAt, sentBy). DB migration run and confirmed.
+   - `artifacts/api-server/src/routes/review-requests.ts` — `POST /api/review-requests`. Validates platform ID is configured on the location, saves record, sends branded email non-blocking.
+
+   Files modified:
+   - `artifacts/api-server/src/lib/email.ts` — added `sendReviewRequestEmail()`. Google links direct to write-review dialog; Zomato/TripAdvisor link to profile page.
+   - `artifacts/api-server/src/routes/index.ts` — registered reviewRequestsRouter.
+   - `artifacts/souklick/src/pages/location-detail.tsx` — "Request Review" orange button in header opens a 3-field modal (customer name, email, platform). Platform dropdown only shows platforms connected to that location.
+
+**Pending items for next session (feature backlog in priority order):**
+
+1. **Response templates** — save reusable canned responses, skip AI for quick replies
+2. **Multi-location summary dashboard** — all locations side-by-side with ratings and pending counts
+3. **Review tagging / sentiment topics** — auto-tag reviews by topic (food, service, wait time)
+4. **Competitor tracking** — monitor a competitor's Google rating over time
+5. **Weekly digest email** — Monday summary: new reviews, avg rating, response rate
+6. **QR code generator** — printable QR that links to your Google review page
+7. **WhatsApp / SMS review alerts** — higher open rate than email for urgent bad reviews
+8. **Public review widget** — embeddable snippet showing best reviews on your website
+
+- **Email system still untested end-to-end** — `RESEND_API_KEY` and `EMAIL_FROM` must be set in Replit Secrets, and a custom sending domain configured in Resend for production.
+
+**No corrections from user this session.**

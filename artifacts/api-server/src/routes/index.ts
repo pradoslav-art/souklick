@@ -8,6 +8,7 @@ import responsesRouter from "./responses";
 import aiRouter from "./ai";
 import analyticsRouter from "./analytics";
 import notificationsRouter from "./notifications";
+import reviewRequestsRouter from "./review-requests";
 import adminRouter from "./admin";
 import billingRouter from "./billing";
 import teamRouter from "./team";
@@ -31,5 +32,6 @@ router.use(responsesRouter);
 router.use(aiRouter);
 router.use(analyticsRouter);
 router.use(notificationsRouter);
+router.use(reviewRequestsRouter);
 
 export default router;

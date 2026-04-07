@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link } from "wouter";
-import { ArrowLeft, MapPin, Star, MessageSquare, Pencil, Loader2, X } from "lucide-react";
+import { ArrowLeft, MapPin, Star, MessageSquare, Pencil, Loader2, X, Send } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -48,6 +48,12 @@ const editSchema = z.object({
   tripadvisorLocationId: z.string().optional(),
 });
 
+const requestSchema = z.object({
+  customerName: z.string().min(2, "Name is required"),
+  customerEmail: z.string().email("Valid email required"),
+  platform: z.string().min(1, "Select a platform"),
+});
+
 interface LocationDetailProps {
   locationId: string;
 }
@@ -56,6 +62,8 @@ export default function LocationDetail({ locationId }: LocationDetailProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [editOpen, setEditOpen] = useState(false);
+  const [requestOpen, setRequestOpen] = useState(false);
+  const [sendingRequest, setSendingRequest] = useState(false);
   const [platform, setPlatform] = useState("all");
   const [rating, setRating] = useState("all");
   const [status, setStatus] = useState("all");
@@ -85,6 +93,34 @@ export default function LocationDetail({ locationId }: LocationDetailProps) {
   };
 
   const updateLocation = useUpdateLocation();
+
+  const requestForm = useForm<z.infer<typeof requestSchema>>({
+    resolver: zodResolver(requestSchema),
+    defaultValues: { customerName: "", customerEmail: "", platform: "" },
+  });
+
+  const onSendRequest = async (data: z.infer<typeof requestSchema>) => {
+    setSendingRequest(true);
+    try {
+      const res = await fetch("/api/review-requests", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ locationId, ...data }),
+        credentials: "include",
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error ?? "Failed to send");
+      }
+      toast({ title: "Request sent!", description: `Email sent to ${data.customerEmail}.`, className: "bg-green-50 border-green-200" });
+      requestForm.reset();
+      setRequestOpen(false);
+    } catch (err: any) {
+      toast({ variant: "destructive", title: "Failed to send", description: err.message });
+    } finally {
+      setSendingRequest(false);
+    }
+  };
 
   const form = useForm<z.infer<typeof editSchema>>({
     resolver: zodResolver(editSchema),
@@ -152,6 +188,9 @@ export default function LocationDetail({ locationId }: LocationDetailProps) {
               </Badge>
               <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setEditOpen(true)}>
                 <Pencil className="w-3.5 h-3.5" /> Edit
+              </Button>
+              <Button size="sm" className="gap-1.5" onClick={() => setRequestOpen(true)}>
+                <Send className="w-3.5 h-3.5" /> Request Review
               </Button>
             </div>
           </div>
@@ -353,6 +392,73 @@ export default function LocationDetail({ locationId }: LocationDetailProps) {
                 <Button type="submit" disabled={updateLocation.isPending}>
                   {updateLocation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                   Save changes
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Request Review dialog */}
+      <Dialog open={requestOpen} onOpenChange={(open) => { setRequestOpen(open); if (!open) requestForm.reset(); }}>
+        <DialogContent className="sm:max-w-[420px]">
+          <DialogHeader>
+            <DialogTitle>Request a review</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground -mt-1">
+            Enter the customer's details and we'll email them a direct link to leave a review.
+          </p>
+          <Form {...requestForm}>
+            <form onSubmit={requestForm.handleSubmit(onSendRequest)} className="space-y-4 pt-1">
+              <FormField
+                control={requestForm.control}
+                name="customerName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Customer Name</FormLabel>
+                    <FormControl><Input placeholder="e.g. Sarah" {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={requestForm.control}
+                name="customerEmail"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Customer Email</FormLabel>
+                    <FormControl><Input type="email" placeholder="customer@example.com" {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={requestForm.control}
+                name="platform"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Platform</FormLabel>
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Choose platform…" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {location?.googlePlaceId && <SelectItem value="google">Google</SelectItem>}
+                        {location?.zomatoRestaurantId && <SelectItem value="zomato">Zomato</SelectItem>}
+                        {(location as any)?.tripadvisorLocationId && <SelectItem value="tripadvisor">TripAdvisor</SelectItem>}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <div className="flex justify-end gap-2 pt-2">
+                <Button type="button" variant="outline" onClick={() => setRequestOpen(false)}>Cancel</Button>
+                <Button type="submit" disabled={sendingRequest} className="gap-2">
+                  {sendingRequest && <Loader2 className="w-4 h-4 animate-spin" />}
+                  Send request
                 </Button>
               </div>
             </form>

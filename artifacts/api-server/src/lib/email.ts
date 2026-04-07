@@ -244,6 +244,76 @@ export async function sendTrialWarningEmail({ to, fullName, daysLeft }: { to: st
   });
 }
 
+export async function sendReviewRequestEmail({
+  to,
+  customerName,
+  locationName,
+  platform,
+  reviewUrl,
+}: {
+  to: string;
+  customerName: string;
+  locationName: string;
+  platform: string;
+  reviewUrl: string;
+}): Promise<void> {
+  const resend = getResend();
+  const fromAddress = process.env.EMAIL_FROM ?? "onboarding@resend.dev";
+  const firstName = customerName.split(" ")[0];
+  const platformLabel = PLATFORM_LABEL[platform] ?? platform;
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8" /></head>
+<body style="margin:0;padding:0;background:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f5;padding:32px 16px;">
+    <tr><td align="center">
+      <table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.08);">
+        <tr>
+          <td style="background:linear-gradient(135deg,#f97316,#ea580c);padding:24px 32px;">
+            <p style="margin:0;font-size:20px;font-weight:700;color:#ffffff;letter-spacing:-0.3px;">${locationName}</p>
+            <p style="margin:4px 0 0;font-size:13px;color:rgba(255,255,255,0.8);">We'd love your feedback</p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:28px 32px;">
+            <p style="margin:0 0 16px;font-size:22px;font-weight:700;color:#111827;">Hi ${firstName} 👋</p>
+            <p style="margin:0 0 20px;font-size:15px;line-height:1.6;color:#374151;">
+              Thank you for visiting <strong>${locationName}</strong>. We hope you had a great experience!
+            </p>
+            <p style="margin:0 0 24px;font-size:15px;line-height:1.6;color:#374151;">
+              If you have a moment, we'd really appreciate it if you could share your thoughts on ${platformLabel}. It means a lot to us and helps other guests find us.
+            </p>
+            <a href="${reviewUrl}" style="display:inline-block;background:#f97316;color:#ffffff;text-decoration:none;font-size:14px;font-weight:600;padding:12px 24px;border-radius:8px;">
+              Leave a review on ${platformLabel} →
+            </a>
+            <p style="margin:24px 0 0;font-size:13px;color:#6b7280;">
+              Takes less than 2 minutes. Thank you for your support!
+            </p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:16px 32px 24px;border-top:1px solid #f3f4f6;">
+            <p style="margin:0;font-size:12px;color:#9ca3af;">
+              You received this because a team member at ${locationName} invited you to leave a review.
+            </p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+
+  await resend.emails.send({
+    from: fromAddress,
+    to,
+    subject: `How was your visit to ${locationName}? We'd love your feedback`,
+    html,
+  });
+}
+
 interface ReviewAlertPayload {
   to: string[];
   reviewerName: string;

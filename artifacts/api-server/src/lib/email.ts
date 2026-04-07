@@ -187,6 +187,63 @@ export async function sendWelcomeEmail({ to, fullName }: { to: string; fullName:
   });
 }
 
+export async function sendTrialWarningEmail({ to, fullName, daysLeft }: { to: string; fullName: string; daysLeft: number }): Promise<void> {
+  const resend = getResend();
+  const fromAddress = process.env.EMAIL_FROM ?? "onboarding@resend.dev";
+  const appUrl = process.env.APP_URL ?? "https://souklick.com";
+  const firstName = fullName.split(" ")[0];
+  const urgencyColor = daysLeft === 1 ? "#dc2626" : "#d97706";
+  const dayLabel = daysLeft === 1 ? "1 day" : `${daysLeft} days`;
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8" /></head>
+<body style="margin:0;padding:0;background:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f5;padding:32px 16px;">
+    <tr><td align="center">
+      <table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.08);">
+        <tr>
+          <td style="background:linear-gradient(135deg,#f97316,#ea580c);padding:24px 32px;">
+            <p style="margin:0;font-size:20px;font-weight:700;color:#ffffff;letter-spacing:-0.3px;">Souklick</p>
+            <p style="margin:4px 0 0;font-size:13px;color:rgba(255,255,255,0.8);">Trial reminder</p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:28px 32px;">
+            <p style="margin:0 0 16px;font-size:18px;font-weight:700;color:#111827;">Hi ${firstName}, your trial ends in <span style="color:${urgencyColor};">${dayLabel}</span></p>
+            <p style="margin:0 0 20px;font-size:15px;line-height:1.6;color:#374151;">
+              Your Souklick free trial is expiring soon. After it ends, you'll lose access to your review dashboard, AI responses, and email alerts.
+            </p>
+            <p style="margin:0 0 24px;font-size:15px;line-height:1.6;color:#374151;">
+              Upgrade now to keep everything running without interruption.
+            </p>
+            <a href="${appUrl}/upgrade" style="display:inline-block;background:#f97316;color:#ffffff;text-decoration:none;font-size:14px;font-weight:600;padding:12px 24px;border-radius:8px;">
+              Upgrade now →
+            </a>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:16px 32px 24px;border-top:1px solid #f3f4f6;">
+            <p style="margin:0;font-size:12px;color:#9ca3af;">
+              You're receiving this because your Souklick trial is ending soon.
+            </p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+
+  await resend.emails.send({
+    from: fromAddress,
+    to,
+    subject: `Your Souklick trial ends in ${dayLabel} — upgrade to keep access`,
+    html,
+  });
+}
+
 interface ReviewAlertPayload {
   to: string[];
   reviewerName: string;

@@ -1,5 +1,6 @@
 import app from "./app";
 import { logger } from "./lib/logger";
+import { checkAndSendTrialWarnings } from "./lib/trial-warnings";
 
 const rawPort = process.env["PORT"];
 
@@ -22,4 +23,12 @@ app.listen(port, (err) => {
   }
 
   logger.info({ port }, "Server listening");
+
+  // Trial warning emails: run 1 minute after startup, then every 24 hours
+  setTimeout(() => {
+    checkAndSendTrialWarnings().catch((err) => logger.error({ err }, "Trial warning check failed"));
+  }, 60_000);
+  setInterval(() => {
+    checkAndSendTrialWarnings().catch((err) => logger.error({ err }, "Trial warning check failed"));
+  }, 24 * 60 * 60 * 1000);
 });

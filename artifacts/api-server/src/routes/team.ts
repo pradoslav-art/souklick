@@ -104,7 +104,7 @@ router.delete("/team/:userId", requireAuth, async (req, res): Promise<void> => {
     return;
   }
 
-  const { userId } = req.params;
+  const userId = req.params["userId"] as string;
   if (userId === req.session.userId) {
     res.status(400).json({ error: "You cannot remove yourself" });
     return;

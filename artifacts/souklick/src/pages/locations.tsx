@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { 
+import { Link } from "wouter";
+import {
   useGetLocations,
   useCreateLocation,
   getGetLocationsQueryKey
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Plus, MapPin, Star, MessageSquare, ExternalLink, Building, Loader2 } from "lucide-react";
+import { Plus, MapPin, Star, MessageSquare, ArrowRight, Building, Loader2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -168,9 +169,11 @@ export default function Locations() {
                     {location.zomatoRestaurantId && <Badge variant="outline" className="text-xs bg-white">Zomato</Badge>}
                     {location.tripadvisorLocationId && <Badge variant="outline" className="text-xs bg-white">TripAdvisor</Badge>}
                   </div>
-                  <Button variant="ghost" size="sm" className="text-primary gap-1">
-                    Manage <ExternalLink className="w-3.5 h-3.5" />
-                  </Button>
+                  <Link href={`/locations/${location.id}`}>
+                    <Button variant="ghost" size="sm" className="text-primary gap-1">
+                      Manage <ArrowRight className="w-3.5 h-3.5" />
+                    </Button>
+                  </Link>
                 </div>
               </CardContent>
             </Card>

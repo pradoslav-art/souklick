@@ -1,13 +1,15 @@
 import { useMemo } from "react";
-import { 
-  useGetAnalyticsSummary, 
-  useGetRatingTrend, 
+import { Link } from "wouter";
+import {
+  useGetAnalyticsSummary,
+  useGetRatingTrend,
   useGetPlatformBreakdown,
   getGetAnalyticsSummaryQueryKey,
   getGetRatingTrendQueryKey,
   getGetPlatformBreakdownQueryKey
 } from "@workspace/api-client-react";
-import { MessageSquare, Star, Reply, Clock } from "lucide-react";
+import { MessageSquare, Star, Reply, Clock, MapPin } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { 
@@ -96,6 +98,32 @@ export default function Analytics() {
               ))}
             </CardContent>
           </Card>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isLoading && summary?.totalReviews === 0) {
+    return (
+      <div className="p-8 max-w-7xl mx-auto">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold tracking-tight mb-1">Performance Analytics</h1>
+          <p className="text-muted-foreground">Track your reputation metrics across all channels.</p>
+        </div>
+        <div className="flex flex-col items-center justify-center py-24 text-center border border-dashed rounded-xl bg-card/50">
+          <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-5">
+            <Star className="w-8 h-8 text-primary" />
+          </div>
+          <h3 className="text-xl font-bold mb-2">No data yet</h3>
+          <p className="text-muted-foreground max-w-sm mb-8">
+            Analytics will appear once reviews start coming in. Start by adding your locations.
+          </p>
+          <Link href="/locations">
+            <Button className="gap-2">
+              <MapPin className="w-4 h-4" />
+              Add a location
+            </Button>
+          </Link>
         </div>
       </div>
     );

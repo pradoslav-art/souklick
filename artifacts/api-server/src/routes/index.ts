@@ -11,6 +11,7 @@ import notificationsRouter from "./notifications";
 import testEmailRouter from "./test-email";
 import adminRouter from "./admin";
 import billingRouter from "./billing";
+import teamRouter from "./team";
 import { requireActiveSubscription } from "../middlewares/auth";
 
 const router: IRouter = Router();
@@ -20,6 +21,7 @@ router.use(adminRouter);
 router.use(billingRouter);
 router.use(healthRouter);
 router.use(authRouter);
+router.use(teamRouter); // includes public /auth/accept-invite
 
 // All routes below require an active subscription (or unexpired trial)
 router.use(requireActiveSubscription);

@@ -12,12 +12,16 @@ const Login = lazy(() => import("@/pages/login"));
 const Dashboard = lazy(() => import("@/pages/dashboard"));
 const Priority = lazy(() => import("@/pages/priority"));
 const Locations = lazy(() => import("@/pages/locations"));
+const LocationDetail = lazy(() => import("@/pages/location-detail"));
 const Analytics = lazy(() => import("@/pages/analytics"));
 const Settings = lazy(() => import("@/pages/settings"));
 const Onboarding = lazy(() => import("@/pages/onboarding"));
 const AdminDashboard = lazy(() => import("@/pages/admin"));
 const Upgrade = lazy(() => import("@/pages/upgrade"));
 const BillingSuccess = lazy(() => import("@/pages/billing-success"));
+const ForgotPassword = lazy(() => import("@/pages/forgot-password"));
+const ResetPassword = lazy(() => import("@/pages/reset-password"));
+const AcceptInvite = lazy(() => import("@/pages/accept-invite"));
 const NotFound = lazy(() => import("@/pages/not-found"));
 
 const queryClient = new QueryClient({
@@ -101,6 +105,9 @@ function Router() {
       <Switch>
         <Route path="/login" component={Login} />
         <Route path="/onboarding" component={Onboarding} />
+        <Route path="/forgot-password" component={ForgotPassword} />
+        <Route path="/reset-password" component={ResetPassword} />
+        <Route path="/accept-invite" component={AcceptInvite} />
 
         {/* Protected Routes */}
         <Route path="/">
@@ -111,6 +118,9 @@ function Router() {
         </Route>
         <Route path="/locations">
           <ProtectedRoute component={Locations} />
+        </Route>
+        <Route path="/locations/:id">
+          {(params) => <ProtectedRoute component={LocationDetail} locationId={params?.id} />}
         </Route>
         <Route path="/analytics">
           <ProtectedRoute component={Analytics} />

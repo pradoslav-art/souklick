@@ -20,6 +20,173 @@ const PLATFORM_LABEL: Record<string, string> = {
   tripadvisor: "TripAdvisor",
 };
 
+export async function sendTeamInviteEmail({ to, inviteUrl, role }: { to: string; inviteUrl: string; role: string }): Promise<void> {
+  const resend = getResend();
+  const fromAddress = process.env.EMAIL_FROM ?? "onboarding@resend.dev";
+  const roleLabel = role === "manager" ? "Manager" : "Staff";
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8" /></head>
+<body style="margin:0;padding:0;background:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f5;padding:32px 16px;">
+    <tr><td align="center">
+      <table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.08);">
+        <tr>
+          <td style="background:linear-gradient(135deg,#f97316,#ea580c);padding:24px 32px;">
+            <p style="margin:0;font-size:20px;font-weight:700;color:#ffffff;">Souklick</p>
+            <p style="margin:4px 0 0;font-size:13px;color:rgba(255,255,255,0.8);">Team invitation</p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:28px 32px;">
+            <p style="margin:0 0 16px;font-size:18px;font-weight:700;color:#111827;">You've been invited to join a team</p>
+            <p style="margin:0 0 20px;font-size:15px;line-height:1.6;color:#374151;">
+              You've been invited to join a Souklick workspace as a <strong>${roleLabel}</strong>. Click below to set up your account and get started.
+            </p>
+            <a href="${inviteUrl}" style="display:inline-block;background:#f97316;color:#ffffff;text-decoration:none;font-size:14px;font-weight:600;padding:12px 24px;border-radius:8px;">
+              Accept invite →
+            </a>
+            <p style="margin:24px 0 0;font-size:13px;color:#6b7280;">This invite expires in 48 hours. If you weren't expecting this, you can safely ignore it.</p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:16px 32px 24px;border-top:1px solid #f3f4f6;">
+            <p style="margin:0;font-size:12px;color:#9ca3af;">
+              If the button doesn't work: <a href="${inviteUrl}" style="color:#9ca3af;">${inviteUrl}</a>
+            </p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+
+  await resend.emails.send({
+    from: fromAddress,
+    to,
+    subject: `You've been invited to join a Souklick workspace`,
+    html,
+  });
+}
+
+export async function sendPasswordResetEmail({ to, resetUrl }: { to: string; resetUrl: string }): Promise<void> {
+  const resend = getResend();
+  const fromAddress = process.env.EMAIL_FROM ?? "onboarding@resend.dev";
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8" /></head>
+<body style="margin:0;padding:0;background:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f5;padding:32px 16px;">
+    <tr><td align="center">
+      <table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.08);">
+        <tr>
+          <td style="background:linear-gradient(135deg,#f97316,#ea580c);padding:24px 32px;">
+            <p style="margin:0;font-size:20px;font-weight:700;color:#ffffff;">Souklick</p>
+            <p style="margin:4px 0 0;font-size:13px;color:rgba(255,255,255,0.8);">Password reset</p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:28px 32px;">
+            <p style="margin:0 0 16px;font-size:18px;font-weight:700;color:#111827;">Reset your password</p>
+            <p style="margin:0 0 24px;font-size:15px;line-height:1.6;color:#374151;">
+              We received a request to reset your Souklick password. Click the button below to choose a new one. This link expires in 1 hour.
+            </p>
+            <a href="${resetUrl}" style="display:inline-block;background:#f97316;color:#ffffff;text-decoration:none;font-size:14px;font-weight:600;padding:12px 24px;border-radius:8px;">
+              Reset password →
+            </a>
+            <p style="margin:24px 0 0;font-size:13px;color:#6b7280;">
+              If you didn't request this, you can safely ignore this email. Your password won't change.
+            </p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:16px 32px 24px;border-top:1px solid #f3f4f6;">
+            <p style="margin:0;font-size:12px;color:#9ca3af;">
+              If the button doesn't work, copy this link: <a href="${resetUrl}" style="color:#9ca3af;">${resetUrl}</a>
+            </p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+
+  await resend.emails.send({
+    from: fromAddress,
+    to,
+    subject: "Reset your Souklick password",
+    html,
+  });
+}
+
+export async function sendWelcomeEmail({ to, fullName }: { to: string; fullName: string }): Promise<void> {
+  const resend = getResend();
+  const fromAddress = process.env.EMAIL_FROM ?? "onboarding@resend.dev";
+
+  const firstName = fullName.split(" ")[0];
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8" /></head>
+<body style="margin:0;padding:0;background:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f5;padding:32px 16px;">
+    <tr><td align="center">
+      <table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.08);">
+
+        <tr>
+          <td style="background:linear-gradient(135deg,#f97316,#ea580c);padding:24px 32px;">
+            <p style="margin:0;font-size:20px;font-weight:700;color:#ffffff;letter-spacing:-0.3px;">Souklick</p>
+            <p style="margin:4px 0 0;font-size:13px;color:rgba(255,255,255,0.8);">Welcome aboard</p>
+          </td>
+        </tr>
+
+        <tr>
+          <td style="padding:28px 32px;">
+            <p style="margin:0 0 16px;font-size:22px;font-weight:700;color:#111827;">Hi ${firstName} 👋</p>
+            <p style="margin:0 0 20px;font-size:15px;line-height:1.6;color:#374151;">
+              Welcome to Souklick — your command centre for managing customer reviews across all your locations.
+            </p>
+            <p style="margin:0 0 8px;font-size:14px;font-weight:600;color:#111827;">Here's how to get started:</p>
+            <ol style="margin:0 0 24px;padding-left:20px;font-size:14px;line-height:2;color:#374151;">
+              <li>Add your first location</li>
+              <li>Connect your review platforms (Google, Zomato, TripAdvisor)</li>
+              <li>Set your AI brand voice so responses sound like you</li>
+            </ol>
+            <a href="${process.env.APP_URL ?? "https://souklick.com"}" style="display:inline-block;background:#f97316;color:#ffffff;text-decoration:none;font-size:14px;font-weight:600;padding:12px 24px;border-radius:8px;">
+              Open Souklick →
+            </a>
+          </td>
+        </tr>
+
+        <tr>
+          <td style="padding:16px 32px 24px;border-top:1px solid #f3f4f6;">
+            <p style="margin:0;font-size:12px;color:#9ca3af;">
+              You're on a 14-day free trial. No credit card needed until you're ready to upgrade.
+            </p>
+          </td>
+        </tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+
+  await resend.emails.send({
+    from: fromAddress,
+    to,
+    subject: `Welcome to Souklick, ${firstName}!`,
+    html,
+  });
+}
+
 interface ReviewAlertPayload {
   to: string[];
   reviewerName: string;

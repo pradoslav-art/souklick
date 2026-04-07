@@ -9,8 +9,7 @@ import {
   GetReviewsPlatform,
   GetReviewsStatus
 } from "@workspace/api-client-react";
-import { Search, SlidersHorizontal, MessageSquare, Mail, Loader2, MapPin } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { Search, SlidersHorizontal, MessageSquare, Loader2, MapPin } from "lucide-react";
 
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -57,26 +56,6 @@ function ReviewCardSkeleton() {
 }
 
 export default function Dashboard() {
-  const { toast } = useToast();
-  const [sendingEmail, setSendingEmail] = useState(false);
-
-  const handleTestEmail = async () => {
-    setSendingEmail(true);
-    try {
-      const res = await fetch("/api/test-email", { method: "POST" });
-      const body = await res.json().catch(() => ({}));
-      if (res.ok) {
-        toast({ title: "Test email sent!", description: "Check souklickuae@gmail.com" });
-      } else {
-        toast({ variant: "destructive", title: "Failed to send", description: body.error || `Server error (${res.status})` });
-      }
-    } catch {
-      toast({ variant: "destructive", title: "Failed to send", description: "Could not reach the server." });
-    } finally {
-      setSendingEmail(false);
-    }
-  };
-
   const [platform, setPlatform] = useState<GetReviewsPlatform | "all">("all");
   const [locationId, setLocationId] = useState<string>("all");
   const [rating, setRating] = useState<string>("all");
@@ -119,24 +98,12 @@ export default function Dashboard() {
           <h1 className="text-3xl font-bold tracking-tight mb-1">Unified Inbox</h1>
           <p className="text-muted-foreground">Manage your brand reputation across all locations.</p>
         </div>
-        <div className="flex items-center gap-3">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleTestEmail}
-            disabled={sendingEmail}
-            className="text-muted-foreground border-dashed"
-          >
-            {sendingEmail ? <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> : <Mail className="w-3.5 h-3.5 mr-1.5" />}
-            Send Test Email
+        <Link href="/priority">
+          <Button variant="outline" className="text-destructive border-destructive/30 hover:bg-destructive/10">
+            <MessageSquare className="w-4 h-4 mr-2" />
+            Priority Queue
           </Button>
-          <Link href="/priority">
-            <Button variant="outline" className="text-destructive border-destructive/30 hover:bg-destructive/10">
-              <MessageSquare className="w-4 h-4 mr-2" />
-              Priority Queue
-            </Button>
-          </Link>
-        </div>
+        </Link>
       </div>
 
       <div className="bg-card border border-border rounded-xl shadow-sm mb-6 p-4">

@@ -15,7 +15,7 @@ interface SettingsProps {
   tab?: string;
 }
 
-export default function Settings({ tab = "brand-voice" }: SettingsProps) {
+export default function Settings({ tab = "profile" }: SettingsProps) {
   const [, setLocation] = useLocation();
 
   const handleTabChange = (value: string) => {

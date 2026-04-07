@@ -8,7 +8,6 @@ import responsesRouter from "./responses";
 import aiRouter from "./ai";
 import analyticsRouter from "./analytics";
 import notificationsRouter from "./notifications";
-import testEmailRouter from "./test-email";
 import adminRouter from "./admin";
 import billingRouter from "./billing";
 import teamRouter from "./team";
@@ -32,6 +31,5 @@ router.use(responsesRouter);
 router.use(aiRouter);
 router.use(analyticsRouter);
 router.use(notificationsRouter);
-router.use(testEmailRouter);
 
 export default router;

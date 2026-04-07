@@ -1,29 +1,117 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "wouter";
-import { ArrowLeft, MapPin, Star, MessageSquare } from "lucide-react";
+import { ArrowLeft, MapPin, Star, MessageSquare, Pencil, Loader2, X } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import {
   useGetLocation,
   getGetLocationQueryKey,
   useGetReviews,
   getGetReviewsQueryKey,
+  useUpdateLocation,
 } from "@workspace/api-client-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { useToast } from "@/hooks/use-toast";
 import ReviewCard from "@/components/review-card";
+
+const editSchema = z.object({
+  name: z.string().min(2, "Name is required"),
+  address: z.string().optional(),
+  googlePlaceId: z.string().optional(),
+  zomatoRestaurantId: z.string().optional(),
+  tripadvisorLocationId: z.string().optional(),
+});
 
 interface LocationDetailProps {
   locationId: string;
 }
 
 export default function LocationDetail({ locationId }: LocationDetailProps) {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [editOpen, setEditOpen] = useState(false);
+  const [platform, setPlatform] = useState("all");
+  const [rating, setRating] = useState("all");
+  const [status, setStatus] = useState("all");
+
   const { data: location, isLoading: loadingLocation } = useGetLocation(locationId, {
     query: { queryKey: getGetLocationQueryKey(locationId) },
   });
 
-  const queryParams = useMemo(() => ({ locationId, limit: 50 }), [locationId]);
+  const queryParams = useMemo(() => ({
+    locationId,
+    limit: 100,
+    ...(platform !== "all" && { platform: platform as any }),
+    ...(rating !== "all" && { rating: parseInt(rating, 10) }),
+    ...(status !== "all" && { status: status as any }),
+  }), [locationId, platform, rating, status]);
+
   const { data: reviewData, isLoading: loadingReviews } = useGetReviews(queryParams, {
     query: { queryKey: getGetReviewsQueryKey(queryParams) },
   });
+
+  const hasActiveFilters = platform !== "all" || rating !== "all" || status !== "all";
+
+  const clearFilters = () => {
+    setPlatform("all");
+    setRating("all");
+    setStatus("all");
+  };
+
+  const updateLocation = useUpdateLocation();
+
+  const form = useForm<z.infer<typeof editSchema>>({
+    resolver: zodResolver(editSchema),
+    values: {
+      name: location?.name ?? "",
+      address: location?.address ?? "",
+      googlePlaceId: location?.googlePlaceId ?? "",
+      zomatoRestaurantId: location?.zomatoRestaurantId ?? "",
+      tripadvisorLocationId: (location as any)?.tripadvisorLocationId ?? "",
+    },
+  });
+
+  const onSave = (data: z.infer<typeof editSchema>) => {
+    updateLocation.mutate(
+      { id: locationId, data },
+      {
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: getGetLocationQueryKey(locationId) });
+          toast({ title: "Location updated", className: "bg-green-50 border-green-200" });
+          setEditOpen(false);
+        },
+        onError: (err: any) => {
+          toast({ variant: "destructive", title: "Failed to update", description: err?.message });
+        },
+      }
+    );
+  };
 
   const reviews = reviewData?.reviews ?? [];
 
@@ -55,27 +143,32 @@ export default function LocationDetail({ locationId }: LocationDetailProps) {
                 </p>
               )}
             </div>
-            <Badge
-              variant={location.isActive ? "default" : "secondary"}
-              className={location.isActive ? "bg-green-100 text-green-800 hover:bg-green-100 shadow-none border-none" : ""}
-            >
-              {location.isActive ? "Active" : "Inactive"}
-            </Badge>
+            <div className="flex items-center gap-2">
+              <Badge
+                variant={location.isActive ? "default" : "secondary"}
+                className={location.isActive ? "bg-green-100 text-green-800 hover:bg-green-100 shadow-none border-none" : ""}
+              >
+                {location.isActive ? "Active" : "Inactive"}
+              </Badge>
+              <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setEditOpen(true)}>
+                <Pencil className="w-3.5 h-3.5" /> Edit
+              </Button>
+            </div>
           </div>
 
           {/* Stats row */}
-          <div className="flex items-center gap-6 mt-5 p-4 bg-card border rounded-xl">
+          <div className="flex flex-wrap items-center gap-4 sm:gap-6 mt-5 p-4 bg-card border rounded-xl">
             <div className="flex items-center gap-2">
               <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
               <span className="font-bold">{location.averageRating?.toFixed(1) ?? "—"}</span>
               <span className="text-sm text-muted-foreground">avg rating</span>
             </div>
-            <div className="w-px h-5 bg-border" />
+            <div className="w-px h-5 bg-border hidden sm:block" />
             <div>
               <span className="font-bold">{location.reviewCount}</span>
               <span className="text-sm text-muted-foreground ml-1.5">reviews</span>
             </div>
-            <div className="w-px h-5 bg-border" />
+            <div className="w-px h-5 bg-border hidden sm:block" />
             <div>
               <span className={`font-bold ${location.responseRate > 80 ? "text-green-600" : location.responseRate < 50 ? "text-destructive" : ""}`}>
                 {location.responseRate}%
@@ -84,8 +177,8 @@ export default function LocationDetail({ locationId }: LocationDetailProps) {
             </div>
             {(location.googlePlaceId || location.zomatoRestaurantId || (location as any).tripadvisorLocationId) && (
               <>
-                <div className="w-px h-5 bg-border" />
-                <div className="flex gap-2">
+                <div className="w-px h-5 bg-border hidden sm:block" />
+                <div className="flex gap-2 flex-wrap">
                   {location.googlePlaceId && <Badge variant="outline" className="text-xs bg-white">Google</Badge>}
                   {location.zomatoRestaurantId && <Badge variant="outline" className="text-xs bg-white">Zomato</Badge>}
                   {(location as any).tripadvisorLocationId && <Badge variant="outline" className="text-xs bg-white">TripAdvisor</Badge>}
@@ -100,7 +193,50 @@ export default function LocationDetail({ locationId }: LocationDetailProps) {
 
       {/* Reviews */}
       <div>
-        <h2 className="text-lg font-semibold mb-4">Reviews</h2>
+        <div className="flex flex-wrap items-center gap-2 mb-4">
+          <h2 className="text-lg font-semibold mr-auto">Reviews</h2>
+          <Select value={platform} onValueChange={setPlatform}>
+            <SelectTrigger className="w-[130px] h-8 text-sm">
+              <SelectValue placeholder="Platform" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All platforms</SelectItem>
+              <SelectItem value="google">Google</SelectItem>
+              <SelectItem value="zomato">Zomato</SelectItem>
+              <SelectItem value="tripadvisor">TripAdvisor</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={rating} onValueChange={setRating}>
+            <SelectTrigger className="w-[110px] h-8 text-sm">
+              <SelectValue placeholder="Rating" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All ratings</SelectItem>
+              <SelectItem value="5">5 stars</SelectItem>
+              <SelectItem value="4">4 stars</SelectItem>
+              <SelectItem value="3">3 stars</SelectItem>
+              <SelectItem value="2">2 stars</SelectItem>
+              <SelectItem value="1">1 star</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={status} onValueChange={setStatus}>
+            <SelectTrigger className="w-[130px] h-8 text-sm">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All statuses</SelectItem>
+              <SelectItem value="pending">Pending</SelectItem>
+              <SelectItem value="draft_saved">Draft saved</SelectItem>
+              <SelectItem value="responded">Responded</SelectItem>
+              <SelectItem value="skipped">Skipped</SelectItem>
+            </SelectContent>
+          </Select>
+          {hasActiveFilters && (
+            <Button variant="ghost" size="sm" className="h-8 gap-1.5 text-muted-foreground" onClick={clearFilters}>
+              <X className="w-3.5 h-3.5" /> Clear
+            </Button>
+          )}
+        </div>
         {loadingReviews ? (
           <div className="space-y-4">
             {[...Array(3)].map((_, i) => (
@@ -128,8 +264,17 @@ export default function LocationDetail({ locationId }: LocationDetailProps) {
         ) : reviews.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center border border-dashed rounded-xl bg-card/50">
             <MessageSquare className="w-10 h-10 text-muted-foreground/40 mb-3" />
-            <p className="font-medium mb-1">No reviews yet</p>
-            <p className="text-sm text-muted-foreground">Reviews for this location will appear here once they come in.</p>
+            {hasActiveFilters ? (
+              <>
+                <p className="font-medium mb-1">No reviews match these filters</p>
+                <button onClick={clearFilters} className="text-sm text-primary hover:underline">Clear filters</button>
+              </>
+            ) : (
+              <>
+                <p className="font-medium mb-1">No reviews yet</p>
+                <p className="text-sm text-muted-foreground">Reviews for this location will appear here once they come in.</p>
+              </>
+            )}
           </div>
         ) : (
           <div className="space-y-4 pb-8">
@@ -139,6 +284,81 @@ export default function LocationDetail({ locationId }: LocationDetailProps) {
           </div>
         )}
       </div>
+
+      {/* Edit dialog */}
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent className="sm:max-w-[460px]">
+          <DialogHeader>
+            <DialogTitle>Edit location</DialogTitle>
+          </DialogHeader>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSave)} className="space-y-4 pt-1">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Location Name</FormLabel>
+                    <FormControl><Input placeholder="e.g. Saffron Kitchen Downtown" {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="address"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Address</FormLabel>
+                    <FormControl><Input placeholder="Full street address" {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <div className="space-y-3 pt-2 border-t">
+                <p className="text-sm font-medium">Platform IDs</p>
+                <FormField
+                  control={form.control}
+                  name="googlePlaceId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs">Google Place ID</FormLabel>
+                      <FormControl><Input placeholder="ChIJ…" {...field} /></FormControl>
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="zomatoRestaurantId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs">Zomato Restaurant ID</FormLabel>
+                      <FormControl><Input placeholder="1234567" {...field} /></FormControl>
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="tripadvisorLocationId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs">TripAdvisor Location ID</FormLabel>
+                      <FormControl><Input placeholder="d12345678" {...field} /></FormControl>
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <div className="flex justify-end gap-2 pt-2">
+                <Button type="button" variant="outline" onClick={() => setEditOpen(false)}>Cancel</Button>
+                <Button type="submit" disabled={updateLocation.isPending}>
+                  {updateLocation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                  Save changes
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

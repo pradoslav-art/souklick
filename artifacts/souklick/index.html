@@ -11,6 +11,28 @@
   </head>
   <body>
     <div id="root"></div>
+    <noscript>Please enable JavaScript to use Souklick.</noscript>
+    <script>
+      window.addEventListener("error", function(e) {
+        var d = document.getElementById("root");
+        if (d && !d.hasChildNodes()) {
+          d.innerHTML = '<div style="padding:40px;font-family:sans-serif;max-width:600px;margin:0 auto">' +
+            '<h2 style="color:#e53e3e">Souklick failed to load</h2>' +
+            '<p style="color:#555">' + (e.message || "Unknown error") + '</p>' +
+            '<p style="color:#888;font-size:13px">' + (e.filename || "") + ':' + (e.lineno || "") + '</p>' +
+            '<p style="margin-top:16px"><button onclick="location.reload()" style="padding:8px 16px;cursor:pointer">Reload</button></p></div>';
+        }
+      });
+      window.addEventListener("unhandledrejection", function(e) {
+        var d = document.getElementById("root");
+        if (d && !d.hasChildNodes()) {
+          d.innerHTML = '<div style="padding:40px;font-family:sans-serif;max-width:600px;margin:0 auto">' +
+            '<h2 style="color:#e53e3e">Souklick failed to load</h2>' +
+            '<p style="color:#555">' + (e.reason && e.reason.message ? e.reason.message : String(e.reason || "Promise rejected")) + '</p>' +
+            '<p style="margin-top:16px"><button onclick="location.reload()" style="padding:8px 16px;cursor:pointer">Reload</button></p></div>';
+        }
+      });
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

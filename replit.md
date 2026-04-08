@@ -97,9 +97,21 @@ Database layer using Drizzle ORM with PostgreSQL.
 OpenAPI spec (`openapi.yaml`) and Orval config. Run codegen:
 `pnpm --filter @workspace/api-spec run codegen`
 
+## Deployment Notes
+
+- **Vite outDir**: Must be `dist/public` (relative to souklick artifact). The deployment static handler serves from `artifacts/souklick/dist/public`.
+- **Express 5 routes**: Catch-all routes use `/*splat` (not bare `*`).
+- **Trust proxy**: `app.set("trust proxy", 1)` is required for secure session cookies behind Replit's proxy.
+- **API client credentials**: `credentials: "include"` in custom-fetch ensures cookies are sent with every API request.
+- **runtimeErrorOverlay**: Must be development-only in vite.config.ts — it injects dev WebSocket code that fails in production.
+- **NODE_ENV**: Explicitly set to `"production"` in artifact.toml `[services.production.build.env]`.
+- **PORT**: Do NOT hardcode in artifact.toml production env — Replit Autoscale injects PORT dynamically.
+- **Custom domain**: souklick.com
+
 ## Environment Variables
 
 - `DATABASE_URL` — PostgreSQL connection string
 - `SESSION_SECRET` — Express session secret
 - `AI_INTEGRATIONS_ANTHROPIC_BASE_URL` — Replit AI proxy base URL
 - `AI_INTEGRATIONS_ANTHROPIC_API_KEY` — Replit AI proxy API key
+- `ADMIN_EMAIL` — Email address for superadmin access (currently `souklickuae@gmail.com`)

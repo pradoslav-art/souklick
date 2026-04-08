@@ -314,6 +314,144 @@ export async function sendReviewRequestEmail({
   });
 }
 
+interface LocationDigestData {
+  name: string;
+  newReviews: number;
+  avgRating: number | null;
+  responseRate: number;
+  worstReview: { reviewerName: string; rating: number; reviewText: string | null } | null;
+}
+
+export async function sendWeeklyDigestEmail({
+  to,
+  fullName,
+  weekStart,
+  weekEnd,
+  locations,
+}: {
+  to: string;
+  fullName: string;
+  weekStart: Date;
+  weekEnd: Date;
+  locations: LocationDigestData[];
+}): Promise<void> {
+  const resend = getResend();
+  const fromAddress = process.env.EMAIL_FROM ?? "onboarding@resend.dev";
+  const appUrl = process.env.APP_URL ?? "https://souklick.com";
+  const firstName = fullName.split(" ")[0];
+
+  const fmt = (d: Date) => d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  const weekLabel = `${fmt(weekStart)} – ${fmt(weekEnd)}`;
+
+  const ratingColor = (r: number | null) => {
+    if (r == null) return "#6b7280";
+    if (r >= 4.0) return "#16a34a";
+    if (r >= 3.0) return "#d97706";
+    return "#dc2626";
+  };
+
+  const responseRateColor = (r: number) => {
+    if (r >= 80) return "#16a34a";
+    if (r >= 50) return "#d97706";
+    return "#dc2626";
+  };
+
+  const locationRows = locations.map((loc) => {
+    const worstBlock = loc.worstReview
+      ? `<tr><td style="padding:0 0 16px;">
+          <div style="background:#fef2f2;border-left:3px solid #fca5a5;border-radius:0 6px 6px 0;padding:12px 16px;">
+            <p style="margin:0 0 4px;font-size:12px;color:#b91c1c;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Needs attention</p>
+            <p style="margin:0 0 4px;font-size:13px;font-weight:600;color:#111827;">${loc.worstReview.reviewerName} — ${"★".repeat(loc.worstReview.rating)}${"☆".repeat(5 - loc.worstReview.rating)}</p>
+            ${loc.worstReview.reviewText ? `<p style="margin:0;font-size:13px;color:#374151;line-height:1.5;">${loc.worstReview.reviewText.slice(0, 200)}${loc.worstReview.reviewText.length > 200 ? "…" : ""}</p>` : ""}
+          </div>
+        </td></tr>`
+      : "";
+
+    return `
+      <tr><td style="padding:0 0 24px;">
+        <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e5e7eb;border-radius:10px;overflow:hidden;">
+          <tr>
+            <td style="background:#f9fafb;padding:14px 20px;border-bottom:1px solid #e5e7eb;">
+              <p style="margin:0;font-size:15px;font-weight:700;color:#111827;">${loc.name}</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:16px 20px;">
+              <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td style="text-align:center;padding:0 8px 16px 0;border-right:1px solid #f3f4f6;width:33%;">
+                    <p style="margin:0 0 2px;font-size:26px;font-weight:800;color:#111827;">${loc.newReviews}</p>
+                    <p style="margin:0;font-size:12px;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;">New reviews</p>
+                  </td>
+                  <td style="text-align:center;padding:0 8px 16px;border-right:1px solid #f3f4f6;width:33%;">
+                    <p style="margin:0 0 2px;font-size:26px;font-weight:800;color:${ratingColor(loc.avgRating)};">${loc.avgRating != null ? loc.avgRating.toFixed(1) + "★" : "—"}</p>
+                    <p style="margin:0;font-size:12px;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;">Avg rating</p>
+                  </td>
+                  <td style="text-align:center;padding:0 0 16px 8px;width:33%;">
+                    <p style="margin:0 0 2px;font-size:26px;font-weight:800;color:${responseRateColor(loc.responseRate)};">${loc.responseRate}%</p>
+                    <p style="margin:0;font-size:12px;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;">Response rate</p>
+                  </td>
+                </tr>
+                ${worstBlock}
+              </table>
+            </td>
+          </tr>
+        </table>
+      </td></tr>`;
+  }).join("");
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8" /></head>
+<body style="margin:0;padding:0;background:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f5;padding:32px 16px;">
+    <tr><td align="center">
+      <table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.08);">
+
+        <tr>
+          <td style="background:linear-gradient(135deg,#f97316,#ea580c);padding:24px 32px;">
+            <p style="margin:0;font-size:20px;font-weight:700;color:#ffffff;letter-spacing:-0.3px;">Souklick</p>
+            <p style="margin:4px 0 0;font-size:13px;color:rgba(255,255,255,0.8);">Weekly digest · ${weekLabel}</p>
+          </td>
+        </tr>
+
+        <tr>
+          <td style="padding:28px 32px 4px;">
+            <p style="margin:0 0 6px;font-size:22px;font-weight:700;color:#111827;">Your week in reviews, ${firstName}</p>
+            <p style="margin:0 0 28px;font-size:15px;color:#6b7280;">Here's how your locations performed over the past 7 days.</p>
+            <table width="100%" cellpadding="0" cellspacing="0">
+              ${locationRows}
+            </table>
+            <a href="${appUrl}" style="display:inline-block;background:#f97316;color:#ffffff;text-decoration:none;font-size:14px;font-weight:600;padding:12px 24px;border-radius:8px;margin-bottom:8px;">
+              Open dashboard →
+            </a>
+          </td>
+        </tr>
+
+        <tr>
+          <td style="padding:20px 32px 24px;border-top:1px solid #f3f4f6;">
+            <p style="margin:0;font-size:12px;color:#9ca3af;">
+              You're receiving this weekly digest from Souklick.
+              <a href="${appUrl}/settings/notifications" style="color:#9ca3af;">Manage preferences</a>
+            </p>
+          </td>
+        </tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+
+  await resend.emails.send({
+    from: fromAddress,
+    to,
+    subject: `Your weekly review digest — ${weekLabel}`,
+    html,
+  });
+}
+
 interface ReviewAlertPayload {
   to: string[];
   reviewerName: string;

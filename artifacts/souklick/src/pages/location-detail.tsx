@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link } from "wouter";
-import { ArrowLeft, MapPin, Star, MessageSquare, Pencil, Loader2, X, Send } from "lucide-react";
+import { ArrowLeft, MapPin, Star, MessageSquare, Pencil, Loader2, X, Send, QrCode } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -40,6 +40,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import ReviewCard from "@/components/review-card";
 import CompetitorsSection from "@/components/competitors-section";
+import QrCodeModal from "@/components/qr-code-modal";
 
 const editSchema = z.object({
   name: z.string().min(2, "Name is required"),
@@ -65,6 +66,7 @@ export default function LocationDetail({ locationId }: LocationDetailProps) {
   const [editOpen, setEditOpen] = useState(false);
   const [requestOpen, setRequestOpen] = useState(false);
   const [sendingRequest, setSendingRequest] = useState(false);
+  const [qrOpen, setQrOpen] = useState(false);
   const [platform, setPlatform] = useState("all");
   const [rating, setRating] = useState("all");
   const [status, setStatus] = useState("all");
@@ -190,6 +192,11 @@ export default function LocationDetail({ locationId }: LocationDetailProps) {
               <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setEditOpen(true)}>
                 <Pencil className="w-3.5 h-3.5" /> Edit
               </Button>
+              {location.googlePlaceId && (
+                <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setQrOpen(true)}>
+                  <QrCode className="w-3.5 h-3.5" /> QR Code
+                </Button>
+              )}
               <Button size="sm" className="gap-1.5" onClick={() => setRequestOpen(true)}>
                 <Send className="w-3.5 h-3.5" /> Request Review
               </Button>
@@ -408,6 +415,16 @@ export default function LocationDetail({ locationId }: LocationDetailProps) {
           </Form>
         </DialogContent>
       </Dialog>
+
+      {/* QR Code modal */}
+      {location?.googlePlaceId && (
+        <QrCodeModal
+          open={qrOpen}
+          onOpenChange={setQrOpen}
+          locationName={location.name}
+          googlePlaceId={location.googlePlaceId}
+        />
+      )}
 
       {/* Request Review dialog */}
       <Dialog open={requestOpen} onOpenChange={(open) => { setRequestOpen(open); if (!open) requestForm.reset(); }}>

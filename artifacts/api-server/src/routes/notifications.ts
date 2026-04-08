@@ -17,16 +17,22 @@ router.get("/user/notifications", requireAuth, async (req, res): Promise<void> =
     notificationEmail: user.notificationEmail,
     notificationPush: user.notificationPush,
     notificationMinRating: user.notificationMinRating,
+    notificationPhone: user.notificationPhone,
+    notificationSms: user.notificationSms,
+    notificationWhatsapp: user.notificationWhatsapp,
   });
 });
 
 router.patch("/user/notifications", requireAuth, async (req, res): Promise<void> => {
-  const { notificationEmail, notificationPush, notificationMinRating } = req.body;
+  const { notificationEmail, notificationPush, notificationMinRating, notificationPhone, notificationSms, notificationWhatsapp } = req.body;
 
   const updates: Record<string, unknown> = {};
   if (notificationEmail !== undefined) updates.notificationEmail = notificationEmail;
   if (notificationPush !== undefined) updates.notificationPush = notificationPush;
   if (notificationMinRating !== undefined) updates.notificationMinRating = notificationMinRating;
+  if (notificationPhone !== undefined) updates.notificationPhone = notificationPhone || null;
+  if (notificationSms !== undefined) updates.notificationSms = notificationSms;
+  if (notificationWhatsapp !== undefined) updates.notificationWhatsapp = notificationWhatsapp;
 
   const [user] = await db
     .update(usersTable)
@@ -38,6 +44,9 @@ router.patch("/user/notifications", requireAuth, async (req, res): Promise<void>
     notificationEmail: user.notificationEmail,
     notificationPush: user.notificationPush,
     notificationMinRating: user.notificationMinRating,
+    notificationPhone: user.notificationPhone,
+    notificationSms: user.notificationSms,
+    notificationWhatsapp: user.notificationWhatsapp,
   });
 });
 

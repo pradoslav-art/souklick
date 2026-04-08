@@ -1,4 +1,5 @@
 import express, { type Express } from "express";
+import { buildWidgetScript } from "./lib/widget-script";
 import cors from "cors";
 import pinoHttp from "pino-http";
 import session from "express-session";
@@ -55,6 +56,15 @@ app.use(
     },
   }),
 );
+
+// Serve the embeddable widget script
+app.get("/widget.js", (req, res) => {
+  const apiBase = process.env.APP_URL ?? `${req.protocol}://${req.headers.host}`;
+  res.setHeader("Content-Type", "application/javascript");
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Cache-Control", "public, max-age=3600");
+  res.send(buildWidgetScript(apiBase));
+});
 
 app.use("/api", router);
 

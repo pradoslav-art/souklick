@@ -12,6 +12,7 @@ export const locationsTable = pgTable("locations", {
   zomatoRestaurantId: text("zomato_restaurant_id"),
   tripadvisorLocationId: text("tripadvisor_location_id"),
   isActive: boolean("is_active").notNull().default(true),
+  widgetToken: text("widget_token"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });

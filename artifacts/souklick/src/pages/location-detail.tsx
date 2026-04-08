@@ -41,6 +41,7 @@ import { useToast } from "@/hooks/use-toast";
 import ReviewCard from "@/components/review-card";
 import CompetitorsSection from "@/components/competitors-section";
 import QrCodeModal from "@/components/qr-code-modal";
+import WidgetEmbed from "@/components/widget-embed";
 
 const editSchema = z.object({
   name: z.string().min(2, "Name is required"),
@@ -339,6 +340,11 @@ export default function LocationDetail({ locationId }: LocationDetailProps) {
           locationName={location.name}
           locationRating={(location as any).averageRating ?? null}
         />
+      )}
+
+      {/* Widget embed */}
+      {location && (
+        <WidgetEmbed locationId={locationId} initialToken={(location as any).widgetToken ?? null} />
       )}
 
       {/* Edit dialog */}

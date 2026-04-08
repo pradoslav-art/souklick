@@ -11,6 +11,7 @@ import notificationsRouter from "./notifications";
 import reviewRequestsRouter from "./review-requests";
 import responseTemplatesRouter from "./response-templates";
 import competitorsRouter from "./competitors";
+import widgetRouter from "./widget";
 import adminRouter from "./admin";
 import billingRouter from "./billing";
 import teamRouter from "./team";
@@ -24,6 +25,7 @@ router.use(billingRouter);
 router.use(healthRouter);
 router.use(authRouter);
 router.use(teamRouter); // includes public /auth/accept-invite
+router.use(widgetRouter); // public widget data endpoint + protected token generator
 
 // All routes below require an active subscription (or unexpired trial)
 router.use(requireActiveSubscription);

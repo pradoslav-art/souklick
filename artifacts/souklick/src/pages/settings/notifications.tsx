@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Loader2, CheckCircle2 } from "lucide-react";
+import { Loader2, CheckCircle2, Phone } from "lucide-react";
 import { 
   useGetNotificationPreferences, 
   useUpdateNotificationPreferences,
@@ -11,6 +11,7 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Form,
   FormControl,
@@ -33,6 +34,9 @@ const notifySchema = z.object({
   notificationEmail: z.boolean(),
   notificationPush: z.boolean(),
   notificationMinRating: z.number().min(1).max(5),
+  notificationPhone: z.string().optional(),
+  notificationSms: z.boolean(),
+  notificationWhatsapp: z.boolean(),
 });
 
 export default function NotificationSettings() {
@@ -51,6 +55,9 @@ export default function NotificationSettings() {
       notificationEmail: true,
       notificationPush: false,
       notificationMinRating: 3,
+      notificationPhone: "",
+      notificationSms: false,
+      notificationWhatsapp: false,
     },
   });
 
@@ -60,6 +67,9 @@ export default function NotificationSettings() {
         notificationEmail: prefs.notificationEmail,
         notificationPush: prefs.notificationPush,
         notificationMinRating: prefs.notificationMinRating,
+        notificationPhone: (prefs as any).notificationPhone ?? "",
+        notificationSms: (prefs as any).notificationSms ?? false,
+        notificationWhatsapp: (prefs as any).notificationWhatsapp ?? false,
       });
     }
   }, [prefs, form]);
@@ -142,6 +152,61 @@ export default function NotificationSettings() {
                       checked={field.value}
                       onCheckedChange={field.onChange}
                     />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+          </div>
+
+          {/* SMS / WhatsApp */}
+          <div className="space-y-6 bg-card border rounded-xl p-6 shadow-sm">
+            <div className="flex items-center gap-2 mb-1">
+              <Phone className="w-4 h-4 text-muted-foreground" />
+              <span className="text-base font-medium">SMS &amp; WhatsApp Alerts</span>
+            </div>
+            <p className="text-sm text-muted-foreground -mt-4">
+              Get an instant text or WhatsApp message when a new review arrives. Requires Twilio to be configured by your admin.
+            </p>
+            <FormField
+              control={form.control}
+              name="notificationPhone"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Phone Number</FormLabel>
+                  <FormControl>
+                    <Input placeholder="+971501234567" {...field} />
+                  </FormControl>
+                  <FormDescription>Include country code (e.g. +971 for UAE, +44 for UK).</FormDescription>
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="notificationSms"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center justify-between rounded-lg">
+                  <div className="space-y-0.5">
+                    <FormLabel className="text-base">SMS Alerts</FormLabel>
+                    <FormDescription>Receive a text message for each new review alert.</FormDescription>
+                  </div>
+                  <FormControl>
+                    <Switch checked={field.value} onCheckedChange={field.onChange} />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+            <div className="h-px bg-border w-full" />
+            <FormField
+              control={form.control}
+              name="notificationWhatsapp"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center justify-between rounded-lg">
+                  <div className="space-y-0.5">
+                    <FormLabel className="text-base">WhatsApp Alerts</FormLabel>
+                    <FormDescription>Receive a WhatsApp message for each new review alert.</FormDescription>
+                  </div>
+                  <FormControl>
+                    <Switch checked={field.value} onCheckedChange={field.onChange} />
                   </FormControl>
                 </FormItem>
               )}

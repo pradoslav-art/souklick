@@ -3,6 +3,7 @@ import { eq, and, lte, gte, desc, asc, sql, count, inArray } from "drizzle-orm";
 import { db, reviewsTable, locationsTable, responsesTable, usersTable } from "@workspace/db";
 import { requireAuth } from "../middlewares/auth";
 import { sendReviewAlerts } from "../lib/email";
+import { sendSmsAlert, sendWhatsAppAlert } from "../lib/sms";
 import { tagReview } from "./ai";
 
 const router: IRouter = Router();
@@ -164,23 +165,33 @@ router.post("/reviews", requireAuth, async (req, res): Promise<void> => {
     reviewDate: reviewDate ? new Date(reviewDate) : new Date(),
   }).returning();
 
-  // Send email alerts to org users who have email notifications on and rating meets their threshold
+  // Send alerts to org users who meet the rating threshold
   try {
-    const recipients = await db
-      .select({ email: usersTable.email })
+    const alertUsers = await db
+      .select({
+        email: usersTable.email,
+        notificationEmail: usersTable.notificationEmail,
+        notificationPhone: usersTable.notificationPhone,
+        notificationSms: usersTable.notificationSms,
+        notificationWhatsapp: usersTable.notificationWhatsapp,
+      })
       .from(usersTable)
       .where(
         and(
           eq(usersTable.organizationId, location.organizationId),
-          eq(usersTable.notificationEmail, true),
           gte(usersTable.notificationMinRating, ratingNum)
         )
       );
 
-    if (recipients.length > 0) {
-      const origin = req.headers.origin || process.env.APP_URL || "http://localhost:5173";
+    const origin = req.headers.origin || process.env.APP_URL || "http://localhost:5173";
+    const stars = "★".repeat(ratingNum) + "☆".repeat(5 - ratingNum);
+    const excerpt = reviewText ? reviewText.slice(0, 120) + (reviewText.length > 120 ? "…" : "") : "";
+    const smsBody = `${stars} New ${ratingNum}★ review at ${location.name}\nFrom: ${reviewerName}${excerpt ? `\n"${excerpt}"` : ""}\nRespond: ${origin}`;
+
+    const emailRecipients = alertUsers.filter((u) => u.notificationEmail).map((u) => u.email);
+    if (emailRecipients.length > 0) {
       sendReviewAlerts({
-        to: recipients.map((r) => r.email),
+        to: emailRecipients,
         reviewerName,
         rating: ratingNum,
         reviewText: reviewText ?? null,
@@ -189,8 +200,20 @@ router.post("/reviews", requireAuth, async (req, res): Promise<void> => {
         appUrl: origin,
       }).catch((err) => console.error("Email alert failed:", err?.message));
     }
+
+    for (const user of alertUsers) {
+      if (!user.notificationPhone) continue;
+      if (user.notificationSms) {
+        sendSmsAlert({ to: user.notificationPhone, message: smsBody })
+          .catch((err) => console.error("SMS alert failed:", err?.message));
+      }
+      if (user.notificationWhatsapp) {
+        sendWhatsAppAlert({ to: user.notificationPhone, message: smsBody })
+          .catch((err) => console.error("WhatsApp alert failed:", err?.message));
+      }
+    }
   } catch (err: any) {
-    console.error("Email alert query failed:", err?.message);
+    console.error("Alert query failed:", err?.message);
   }
 
   // Auto-tag in background (non-blocking)

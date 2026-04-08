@@ -16,6 +16,9 @@ export const usersTable = pgTable("users", {
   notificationEmail: boolean("notification_email").notNull().default(true),
   notificationPush: boolean("notification_push").notNull().default(true),
   notificationMinRating: integer("notification_min_rating").notNull().default(3),
+  notificationPhone: text("notification_phone"),
+  notificationSms: boolean("notification_sms").notNull().default(false),
+  notificationWhatsapp: boolean("notification_whatsapp").notNull().default(false),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });

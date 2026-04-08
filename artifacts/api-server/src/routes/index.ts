@@ -10,6 +10,7 @@ import analyticsRouter from "./analytics";
 import notificationsRouter from "./notifications";
 import reviewRequestsRouter from "./review-requests";
 import responseTemplatesRouter from "./response-templates";
+import competitorsRouter from "./competitors";
 import adminRouter from "./admin";
 import billingRouter from "./billing";
 import teamRouter from "./team";
@@ -35,5 +36,6 @@ router.use(analyticsRouter);
 router.use(notificationsRouter);
 router.use(reviewRequestsRouter);
 router.use(responseTemplatesRouter);
+router.use(competitorsRouter);
 
 export default router;

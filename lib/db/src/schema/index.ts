@@ -5,3 +5,4 @@ export * from "./reviews";
 export * from "./responses";
 export * from "./review-requests";
 export * from "./response-templates";
+export * from "./competitors";

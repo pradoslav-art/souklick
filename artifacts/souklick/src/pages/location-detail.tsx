@@ -39,6 +39,7 @@ import {
 } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import ReviewCard from "@/components/review-card";
+import CompetitorsSection from "@/components/competitors-section";
 
 const editSchema = z.object({
   name: z.string().min(2, "Name is required"),
@@ -323,6 +324,15 @@ export default function LocationDetail({ locationId }: LocationDetailProps) {
           </div>
         )}
       </div>
+
+      {/* Competitors */}
+      {location && (
+        <CompetitorsSection
+          locationId={locationId}
+          locationName={location.name}
+          locationRating={(location as any).averageRating ?? null}
+        />
+      )}
 
       {/* Edit dialog */}
       <Dialog open={editOpen} onOpenChange={setEditOpen}>

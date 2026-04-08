@@ -1,6 +1,7 @@
 import app from "./app";
 import { logger } from "./lib/logger";
 import { checkAndSendTrialWarnings } from "./lib/trial-warnings";
+import { refreshAllCompetitors } from "./lib/competitor-refresh";
 import { pool } from "@workspace/db";
 
 const rawPort = process.env["PORT"];
@@ -42,9 +43,11 @@ ensureSessionTable()
 
       setTimeout(() => {
         checkAndSendTrialWarnings().catch((err) => logger.error({ err }, "Trial warning check failed"));
+        refreshAllCompetitors().catch((err) => logger.error({ err }, "Competitor refresh failed"));
       }, 60_000);
       setInterval(() => {
         checkAndSendTrialWarnings().catch((err) => logger.error({ err }, "Trial warning check failed"));
+        refreshAllCompetitors().catch((err) => logger.error({ err }, "Competitor refresh failed"));
       }, 24 * 60 * 60 * 1000);
     });
   })

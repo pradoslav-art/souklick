@@ -117,8 +117,12 @@ export default function ReviewCard({ review, isPriority = false }: ReviewCardPro
 
   return (
     <>
-      <Card 
-        className={`overflow-hidden transition-all duration-200 hover:shadow-md cursor-pointer border ${isPriority ? 'border-destructive/40 shadow-sm' : 'border-border'}`}
+      <Card
+        className={`overflow-hidden transition-all duration-200 hover:shadow-md cursor-pointer ${
+          isPriority
+            ? 'border border-destructive/40 shadow-sm'
+            : `border border-border border-l-4 ${review.rating >= 4 ? 'border-l-green-400' : review.rating === 3 ? 'border-l-amber-400' : 'border-l-red-400'}`
+        }`}
         onClick={() => setModalOpen(true)}
       >
         <CardContent className="p-0">

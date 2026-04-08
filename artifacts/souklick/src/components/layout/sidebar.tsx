@@ -69,8 +69,8 @@ export default function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
       {/* Logo */}
       <div className="px-5 py-6 flex items-center justify-between gap-2.5">
         <div className="flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded-lg flex items-center justify-center text-white font-semibold text-sm"
-            style={{ background: "linear-gradient(145deg, hsl(25,95%,58%), hsl(25,95%,46%))" }}>
+          <div className="w-7 h-7 rounded-lg flex items-center justify-center text-white font-bold text-sm"
+            style={{ background: "linear-gradient(145deg, hsl(25,95%,62%), hsl(22,90%,48%))" }}>
             S
           </div>
           <span className="text-[15px] font-semibold tracking-tight text-sidebar-foreground">
@@ -169,7 +169,7 @@ export default function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
                 <p className="text-[13px] font-medium text-sidebar-foreground truncate leading-tight">
                   {user?.fullName}
                 </p>
-                <p className="text-[11px] text-muted-foreground/70 truncate leading-tight mt-0.5">
+                <p className="text-[11px] text-sidebar-foreground/45 truncate leading-tight mt-0.5">
                   {user?.email}
                 </p>
               </div>

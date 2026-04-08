@@ -400,6 +400,34 @@ Your job is to be the developer they would hire if they could afford a great one
 
 ---
 
+### Session: 2026-04-08 (continued — style audit + app health check)
+
+**What we did:**
+
+1. **Visual redesign — 4 targeted improvements:**
+
+   - **Dark sidebar** (`artifacts/souklick/src/index.css`): Switched sidebar from white to dark navy-charcoal (`222 20% 11%`) in light mode. All major review management competitors (Podium, Birdeye, ReviewTrackers) use a dark sidebar — single biggest "pro SaaS" visual upgrade.
+   - **Inter font activated** (`artifacts/souklick/src/index.css`): Inter was already loaded in `index.html` but the font stack started with SF Pro. Flipped order so Inter renders first — consistent cross-platform (not just Apple devices).
+   - **Rating-based left border on review cards** (`artifacts/souklick/src/components/review-card.tsx`): Green border = 4–5 stars, amber = 3 stars, red = 1–2 stars. Priority cards keep their existing red outline.
+   - **Sidebar email text fix** (`artifacts/souklick/src/components/layout/sidebar.tsx`): Email line used global `text-muted-foreground/70` (dark grey) — invisible on dark sidebar. Changed to `text-sidebar-foreground/45`.
+
+2. **Full 10-point app audit — all clear:**
+   - All 16 API routes registered and reachable
+   - All frontend pages routed in App.tsx
+   - No broken imports anywhere in components or pages
+   - All frontend fetch/hook calls match real server endpoints
+   - All DB schema tables exported from `@workspace/db`
+   - Circular import (review-card ↔ review-modal) confirmed fixed
+   - Widget script `/widget.js` confirmed registered
+   - Scheduler confirmed wiring: trial warnings + competitor refresh + weekly digest all firing
+   - TypeScript clean across frontend, API server, and DB package
+
+3. **Deleted dead file** — `artifacts/api-server/src/routes/test-email.ts` was unregistered but still on disk. Deleted.
+
+**No pending items. No corrections from user this session.**
+
+---
+
 ### Session: 2026-04-07 (continued)
 
 **What we did:**

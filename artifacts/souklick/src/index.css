@@ -95,14 +95,14 @@ html, body {
   --card-foreground: 240 2% 11%;
   --card-border: 240 5% 89%;
 
-  /* Sidebar — white with subtle border */
-  --sidebar: 0 0% 100%;
-  --sidebar-foreground: 240 2% 11%;
-  --sidebar-border: 240 5% 90%;
+  /* Sidebar — dark charcoal (industry standard for review management SaaS) */
+  --sidebar: 222 20% 11%;
+  --sidebar-foreground: 210 30% 94%;
+  --sidebar-border: 222 20% 18%;
   --sidebar-primary: 25 95% 53%;
   --sidebar-primary-foreground: 0 0% 100%;
-  --sidebar-accent: 240 5% 94%;
-  --sidebar-accent-foreground: 240 2% 11%;
+  --sidebar-accent: 222 20% 17%;
+  --sidebar-accent-foreground: 210 30% 94%;
   --sidebar-ring: 25 95% 53%;
 
   /* Popover */
@@ -136,8 +136,8 @@ html, body {
   --chart-4: 43 74% 66%;
   --chart-5: 27 87% 67%;
 
-  /* Typography — SF Pro on Apple devices, falls back cleanly */
-  --app-font-sans: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', Arial, sans-serif;
+  /* Typography — Inter for consistent cross-platform rendering */
+  --app-font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
   --app-font-serif: Georgia, 'Times New Roman', serif;
   --app-font-mono: 'SF Mono', 'Fira Code', Menlo, Monaco, monospace;
 

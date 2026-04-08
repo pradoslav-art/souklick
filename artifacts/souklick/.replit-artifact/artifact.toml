@@ -18,9 +18,14 @@ localPort = 26011
 run = "pnpm --filter @workspace/souklick run dev"
 
 [services.production]
-build = [ "pnpm", "--filter", "@workspace/souklick", "run", "build" ]
 publicDir = "artifacts/souklick/dist/public"
 serve = "static"
+
+[services.production.build]
+args = [ "pnpm", "--filter", "@workspace/souklick", "run", "build" ]
+
+[services.production.build.env]
+NODE_ENV = "production"
 
 [[services.production.rewrites]]
 from = "/*"

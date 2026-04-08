@@ -36,6 +36,16 @@ async function getLocationWithStats(locationId: string) {
       )
     );
 
+  const pendingCountResult = await db
+    .select({ count: count(reviewsTable.id) })
+    .from(reviewsTable)
+    .where(
+      and(
+        eq(reviewsTable.locationId, locationId),
+        eq(reviewsTable.responseStatus, "pending")
+      )
+    );
+
   const totalCount = reviewStats[0]?.reviewCount ?? 0;
   const respCount = respondedCount[0]?.count ?? 0;
   const responseRate = totalCount > 0 ? (Number(respCount) / Number(totalCount)) * 100 : 0;
@@ -53,6 +63,7 @@ async function getLocationWithStats(locationId: string) {
     averageRating: reviewStats[0]?.avgRating ? Number(reviewStats[0].avgRating) : null,
     reviewCount: Number(totalCount),
     responseRate: Math.round(responseRate),
+    pendingCount: Number(pendingCountResult[0]?.count ?? 0),
   };
 }
 

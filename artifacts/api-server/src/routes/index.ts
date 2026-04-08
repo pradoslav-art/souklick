@@ -9,6 +9,7 @@ import aiRouter from "./ai";
 import analyticsRouter from "./analytics";
 import notificationsRouter from "./notifications";
 import reviewRequestsRouter from "./review-requests";
+import responseTemplatesRouter from "./response-templates";
 import adminRouter from "./admin";
 import billingRouter from "./billing";
 import teamRouter from "./team";
@@ -33,5 +34,6 @@ router.use(aiRouter);
 router.use(analyticsRouter);
 router.use(notificationsRouter);
 router.use(reviewRequestsRouter);
+router.use(responseTemplatesRouter);
 
 export default router;

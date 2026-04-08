@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { Link } from "wouter";
-import { Bell, MessageSquare, Zap, CreditCard, User, Users } from "lucide-react";
+import { Bell, MessageSquare, Zap, CreditCard, User, Users, FileText } from "lucide-react";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import BrandVoiceSettings from "./settings/brand-voice";
@@ -10,6 +10,7 @@ import BillingSettings from "./settings/billing";
 import ProfileSettings from "./settings/profile";
 import PlatformSettings from "./settings/platforms";
 import TeamSettings from "./settings/team";
+import TemplatesSettings from "./settings/templates";
 
 interface SettingsProps {
   tab?: string;
@@ -30,7 +31,7 @@ export default function Settings({ tab = "profile" }: SettingsProps) {
       </div>
 
       <Tabs value={tab} onValueChange={handleTabChange} className="w-full">
-        <TabsList className="mb-8 w-full grid grid-cols-3 md:inline-flex md:w-auto h-auto p-1 bg-muted/50 border">
+        <TabsList className="mb-8 w-full grid grid-cols-3 md:inline-flex md:w-auto h-auto p-1 bg-muted/50 border flex-wrap">
           <TabsTrigger value="profile" className="py-2.5 px-2 sm:px-6 data-[state=active]:bg-background data-[state=active]:shadow-sm">
             <User className="w-4 h-4 mr-2 shrink-0 hidden sm:inline" />
             Profile
@@ -55,6 +56,10 @@ export default function Settings({ tab = "profile" }: SettingsProps) {
             <Users className="w-4 h-4 mr-2 shrink-0 hidden sm:inline" />
             Team
           </TabsTrigger>
+          <TabsTrigger value="templates" className="py-2.5 px-2 sm:px-6 data-[state=active]:bg-background data-[state=active]:shadow-sm">
+            <FileText className="w-4 h-4 mr-2 shrink-0 hidden sm:inline" />
+            Templates
+          </TabsTrigger>
         </TabsList>
 
         <div className="bg-card border border-border rounded-xl shadow-sm overflow-hidden">
@@ -75,6 +80,9 @@ export default function Settings({ tab = "profile" }: SettingsProps) {
           </TabsContent>
           <TabsContent value="team" className="m-0 p-0 outline-none">
             <TeamSettings />
+          </TabsContent>
+          <TabsContent value="templates" className="m-0 p-0 outline-none">
+            <TemplatesSettings />
           </TabsContent>
         </div>
       </Tabs>

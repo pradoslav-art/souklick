@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
-import { Bot, Save, Check, Loader2, RefreshCw, AlertCircle, CheckCircle, Copy } from "lucide-react";
+import { Bot, Save, Check, Loader2, RefreshCw, AlertCircle, CheckCircle, Copy, FileText, ChevronDown } from "lucide-react";
 import { 
   useGetReview, 
   useGenerateAiResponse,
@@ -20,6 +20,12 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -39,6 +45,8 @@ export default function ReviewModal({ reviewId, open, onOpenChange }: ReviewModa
   const [draftText, setDraftText] = useState("");
   const [userNotes, setUserNotes] = useState("");
   const [copied, setCopied] = useState(false);
+  const [templates, setTemplates] = useState<{ id: string; name: string; body: string }[]>([]);
+  const [templatesLoaded, setTemplatesLoaded] = useState(false);
   
   // Queries
   const { data: review, isLoading: isReviewLoading } = useGetReview(reviewId, {
@@ -62,6 +70,16 @@ export default function ReviewModal({ reviewId, open, onOpenChange }: ReviewModa
     setUserNotes("");
     setCopied(false);
   }, [activeResponse, open]);
+
+  const loadTemplates = async () => {
+    if (templatesLoaded) return;
+    try {
+      const res = await fetch("/api/response-templates", { credentials: "include" });
+      if (res.ok) setTemplates(await res.json());
+    } finally {
+      setTemplatesLoaded(true);
+    }
+  };
 
   const handleCopy = () => {
     navigator.clipboard.writeText(draftText).then(() => {
@@ -240,22 +258,54 @@ export default function ReviewModal({ reviewId, open, onOpenChange }: ReviewModa
                   </Button>
                 )}
                 {!isResponded && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-8 gap-1.5 text-primary border-primary/20 hover:bg-primary/5"
-                    onClick={handleGenerate}
-                    disabled={isWorking}
-                  >
-                    {generateDraft.isPending ? (
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    ) : draftText ? (
-                      <RefreshCw className="w-3.5 h-3.5" />
-                    ) : (
-                      <Bot className="w-3.5 h-3.5" />
-                    )}
-                    {draftText ? "Regenerate AI Draft" : "Generate AI Draft"}
-                  </Button>
+                  <>
+                    <DropdownMenu onOpenChange={(open) => { if (open) loadTemplates(); }}>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-8 gap-1.5"
+                          disabled={isWorking}
+                        >
+                          <FileText className="w-3.5 h-3.5" />
+                          Use Template
+                          <ChevronDown className="w-3 h-3 opacity-60" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-56">
+                        {!templatesLoaded ? (
+                          <DropdownMenuItem disabled>
+                            <Loader2 className="w-3.5 h-3.5 mr-2 animate-spin" />
+                            Loading...
+                          </DropdownMenuItem>
+                        ) : templates.length === 0 ? (
+                          <DropdownMenuItem disabled>No templates saved yet</DropdownMenuItem>
+                        ) : (
+                          templates.map(t => (
+                            <DropdownMenuItem key={t.id} onSelect={() => setDraftText(t.body)}>
+                              {t.name}
+                            </DropdownMenuItem>
+                          ))
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-8 gap-1.5 text-primary border-primary/20 hover:bg-primary/5"
+                      onClick={handleGenerate}
+                      disabled={isWorking}
+                    >
+                      {generateDraft.isPending ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      ) : draftText ? (
+                        <RefreshCw className="w-3.5 h-3.5" />
+                      ) : (
+                        <Bot className="w-3.5 h-3.5" />
+                      )}
+                      {draftText ? "Regenerate AI Draft" : "Generate AI Draft"}
+                    </Button>
+                  </>
                 )}
               </div>
             </div>

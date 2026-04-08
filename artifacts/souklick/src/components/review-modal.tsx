@@ -20,7 +20,6 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { VisuallyHidden } from "@/components/ui/visually-hidden";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -232,10 +231,10 @@ export default function ReviewModal({ reviewId, open, onOpenChange }: ReviewModa
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[calc(100vw-1.5rem)] sm:max-w-2xl md:max-w-3xl p-0 overflow-hidden gap-0 border-border mx-3 sm:mx-auto max-h-[calc(100dvh-1.5rem)]">
-        <VisuallyHidden>
+        <DialogHeader className="sr-only">
           <DialogTitle>Review response editor</DialogTitle>
           <DialogDescription>Review the customer feedback and draft or approve a response.</DialogDescription>
-        </VisuallyHidden>
+        </DialogHeader>
         <div className="bg-muted/40 p-4 sm:p-6 border-b border-border flex items-start justify-between">
           <div className="flex items-start gap-4">
             <Avatar className="h-12 w-12 border bg-background shadow-sm">

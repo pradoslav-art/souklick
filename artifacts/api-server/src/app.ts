@@ -73,7 +73,7 @@ app.get("/widget.js", (req, res) => {
 app.use("/api", router);
 
 // Serve the React frontend in production
-const frontendDist = path.resolve(__dirname, "public");
+const frontendDist = path.resolve(__dirname, "../../souklick/dist/public");
 const frontendExists = fs.existsSync(frontendDist);
 logger.info({ frontendDist, frontendExists }, "Frontend static files check");
 

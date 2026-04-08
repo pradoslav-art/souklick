@@ -369,6 +369,39 @@ Your job is to be the developer they would hire if they could afford a great one
 
 ---
 
+### Session: 2026-04-08 (continued — deployment + domain)
+
+**What we did:**
+
+1. **Fixed Replit deployment — blank page on publish.** Multiple layers of issues, resolved one by one:
+
+   - **Root cause 1:** `BASE_PATH` env var was required in `vite.config.ts` and threw if missing — production build was silently crashing. Fixed: default to `"/"`.
+   - **Root cause 2:** API server had no `express.static` or SPA fallback — frontend was never served. Fixed: added both to `app.ts`.
+   - **Root cause 3:** `.replit` had no `[deployment.build]` or `[deployment.run]` — Replit didn't know how to build or start the app. Fixed: added `build` and `run` keys directly inside `[deployment]` (NOT as sub-tables — Replit ignores those).
+   - **Root cause 4:** Frontend built to `artifacts/souklick/dist/public` but only `artifacts/api-server` ships in the container. Attempted fix: changed Vite outDir to `artifacts/api-server/dist/public`. Replit's AI agent later reverted outDir to local `dist/public` and added other fixes (trust proxy, credentials:include, error overlay in index.html). This left a path mismatch — server looking at wrong folder.
+   - **Root cause 5:** `manualChunks` in vite.config.ts split React into its own chunk, causing `Cannot set properties of undefined (setting 'Children')` crash at startup. Fixed: removed `manualChunks` entirely.
+   - **Current fix applied end of session:** `app.ts` updated to look for frontend at `path.resolve(__dirname, "../../souklick/dist/public")` to match where Vite now outputs.
+
+2. **Connected `souklick.com` domain via Namecheap** — DNS verified, SSL provisioned by Replit.
+
+**STATUS: Blank page NOT fully confirmed fixed at end of session.** The path mismatch fix was applied but not deployed/tested. Next session must verify `souklick.com` loads the app correctly.
+
+**Key files modified this session:**
+- `artifacts/souklick/vite.config.ts` — removed manualChunks, BASE_PATH/PORT defaults, outDir back to local `dist/public`
+- `artifacts/api-server/src/app.ts` — added static serving + SPA fallback + trust proxy + debug logging; frontend path = `../../souklick/dist/public`
+- `.replit` — added `build` and `run` keys to `[deployment]`
+- `lib/api-client-react/src/custom-fetch.ts` — added `credentials: "include"` to all fetch calls
+- `artifacts/souklick/index.html` — added JS error overlay for debugging
+
+**Things to do next session:**
+1. Deploy and verify `souklick.com` loads the app (not blank page)
+2. If still blank: check Replit deploy logs for `"frontendDist"` JSON log entry to confirm path and existence
+3. Once app loads: set `APP_URL=https://souklick.com` in Replit Secrets
+4. Remove the debug logging from `app.ts` (the `logger.info` and 503 fallback) once confirmed working
+5. Stripe Customer Portal — subscribers still have no self-serve billing management
+
+---
+
 ### Session: 2026-04-07
 
 **What we did:**

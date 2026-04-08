@@ -1,10 +1,9 @@
 import { useState } from "react";
 import { format, differenceInDays } from "date-fns";
-import { SiGoogle, SiZomato, SiTripadvisor } from "react-icons/si";
 import { Star, Clock, FileText, CheckCircle, ExternalLink, Bot, PenLine, AlertCircle, Tag, Loader2 } from "lucide-react";
+import { PlatformIcon } from "./platform-icon";
 import {
   Review,
-  ReviewPlatform,
   useUpdateReviewStatus,
   getGetReviewsQueryKey,
   getGetPriorityCountQueryKey,
@@ -45,14 +44,7 @@ interface ReviewCardProps {
   isPriority?: boolean;
 }
 
-export const PlatformIcon = ({ platform, className = "w-4 h-4" }: { platform: ReviewPlatform, className?: string }) => {
-  switch (platform) {
-    case "google": return <SiGoogle className={`text-[#4285F4] ${className}`} />;
-    case "zomato": return <SiZomato className={`text-[#E23744] ${className}`} />;
-    case "tripadvisor": return <SiTripadvisor className={`text-[#00AF87] ${className}`} />;
-    default: return <Star className={className} />;
-  }
-};
+export { PlatformIcon } from "./platform-icon";
 
 export default function ReviewCard({ review, isPriority = false }: ReviewCardProps) {
   const [modalOpen, setModalOpen] = useState(false);

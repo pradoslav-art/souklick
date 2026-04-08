@@ -31,7 +31,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { SiGoogle, SiZomato, SiTripadvisor } from "react-icons/si";
+import { PlatformIcon } from "./platform-icon";
 
 interface ReviewModalProps {
   reviewId: string;
@@ -50,18 +50,6 @@ const TAG_COLOURS: Record<string, string> = {
   delivery:    "bg-pink-100 text-pink-800 border-pink-200",
 };
 
-function PlatformIcon({ platform, className = "w-4 h-4" }: { platform: string; className?: string }) {
-  switch (platform) {
-    case "google":
-      return <SiGoogle className={`text-[#4285F4] ${className}`} />;
-    case "zomato":
-      return <SiZomato className={`text-[#E23744] ${className}`} />;
-    case "tripadvisor":
-      return <SiTripadvisor className={`text-[#00AF87] ${className}`} />;
-    default:
-      return <Check className={className} />;
-  }
-}
 
 export default function ReviewModal({ reviewId, open, onOpenChange }: ReviewModalProps) {
   const { toast } = useToast();

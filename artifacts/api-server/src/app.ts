@@ -71,7 +71,7 @@ app.get("/widget.js", (req, res) => {
 app.use("/api", router);
 
 // Serve the React frontend in production
-const frontendDist = path.resolve(__dirname, "../../souklick/dist/public");
+const frontendDist = path.resolve(__dirname, "public");
 if (fs.existsSync(frontendDist)) {
   app.use(express.static(frontendDist));
   // SPA fallback — all non-API routes return index.html so React Router works

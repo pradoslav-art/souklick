@@ -29,7 +29,13 @@
       "Bash(node:*)",
       "Bash(pnpm:*)",
       "Bash(printf '\\\\n\\\\n')",
-      "Bash(yes \"create table\")"
+      "Bash(yes \"create table\")",
+      "Bash(PORT=3000 pnpm --filter souklick build)",
+      "Bash(grep -n \"router\\\\.\\\\\\(get\\\\|post\\\\|patch\\\\|put\\\\|delete\\\\\\)\" artifacts/api-server/src/routes/*.ts)",
+      "Bash(grep:*)",
+      "Bash(ls artifacts/api-server/src/routes/*.ts)",
+      "Bash(xargs -I {} basename {})",
+      "Bash(ls artifacts/souklick/src/components/*.tsx)"
     ]
   }
 }

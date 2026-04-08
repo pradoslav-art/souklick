@@ -10,6 +10,14 @@ id = "artifacts/mockup-sandbox"
 router = "application"
 deploymentTarget = "autoscale"
 
+[deployment.build]
+args = ["sh", "-c", "pnpm install --frozen-lockfile && pnpm --filter @workspace/souklick run build && pnpm --filter @workspace/api-server run build"]
+env = { "NODE_ENV" = "production" }
+
+[deployment.run]
+args = ["node", "artifacts/api-server/dist/index.mjs"]
+env = { "NODE_ENV" = "production" }
+
 [deployment.postBuild]
 args = ["pnpm", "store", "prune"]
 env = { "CI" = "true" }

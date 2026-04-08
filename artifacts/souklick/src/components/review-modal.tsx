@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
-import { Bot, Save, Check, Loader2, RefreshCw, AlertCircle, CheckCircle, Copy, FileText, ChevronDown } from "lucide-react";
+import { Bot, Save, Check, Loader2, RefreshCw, AlertCircle, CheckCircle, Copy, FileText, ChevronDown, Tag } from "lucide-react";
 import { 
   useGetReview, 
   useGenerateAiResponse,
@@ -39,6 +39,17 @@ interface ReviewModalProps {
   onOpenChange: (open: boolean) => void;
 }
 
+const TAG_COLOURS: Record<string, string> = {
+  food:        "bg-orange-100 text-orange-800 border-orange-200",
+  service:     "bg-blue-100 text-blue-800 border-blue-200",
+  "wait time": "bg-yellow-100 text-yellow-800 border-yellow-200",
+  ambiance:    "bg-purple-100 text-purple-800 border-purple-200",
+  value:       "bg-green-100 text-green-800 border-green-200",
+  cleanliness: "bg-cyan-100 text-cyan-800 border-cyan-200",
+  staff:       "bg-indigo-100 text-indigo-800 border-indigo-200",
+  delivery:    "bg-pink-100 text-pink-800 border-pink-200",
+};
+
 export default function ReviewModal({ reviewId, open, onOpenChange }: ReviewModalProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -47,6 +58,7 @@ export default function ReviewModal({ reviewId, open, onOpenChange }: ReviewModa
   const [copied, setCopied] = useState(false);
   const [templates, setTemplates] = useState<{ id: string; name: string; body: string }[]>([]);
   const [templatesLoaded, setTemplatesLoaded] = useState(false);
+  const [tagging, setTagging] = useState(false);
   
   // Queries
   const { data: review, isLoading: isReviewLoading } = useGetReview(reviewId, {
@@ -70,6 +82,21 @@ export default function ReviewModal({ reviewId, open, onOpenChange }: ReviewModa
     setUserNotes("");
     setCopied(false);
   }, [activeResponse, open]);
+
+  const handleAutoTag = async () => {
+    setTagging(true);
+    try {
+      await fetch("/api/ai/tag-review", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reviewId }),
+        credentials: "include",
+      });
+      queryClient.invalidateQueries({ queryKey: getGetReviewQueryKey(reviewId) });
+    } finally {
+      setTagging(false);
+    }
+  };
 
   const loadTemplates = async () => {
     if (templatesLoaded) return;
@@ -226,6 +253,30 @@ export default function ReviewModal({ reviewId, open, onOpenChange }: ReviewModa
             <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-wider mb-2">Customer Review</h3>
             <div className="bg-card border border-border p-4 rounded-xl text-foreground text-[15px] leading-relaxed shadow-sm">
               {review.reviewText || <span className="italic text-muted-foreground">Rating only, no text provided.</span>}
+            </div>
+          </div>
+
+          {/* Tags */}
+          <div className="mb-5">
+            <div className="flex items-center gap-2 flex-wrap">
+              {(review.tags ?? []).map((tag: string) => {
+                const colours = TAG_COLOURS[tag] ?? "bg-muted text-muted-foreground border-border";
+                return (
+                  <span key={tag} className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold border ${colours}`}>
+                    {tag}
+                  </span>
+                );
+              })}
+              {review.reviewText && (review.tags ?? []).length === 0 && (
+                <button
+                  onClick={handleAutoTag}
+                  disabled={tagging}
+                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border border-dashed border-muted-foreground/40 text-muted-foreground hover:border-primary/50 hover:text-primary transition-colors disabled:opacity-50"
+                >
+                  {tagging ? <Loader2 className="w-3 h-3 animate-spin" /> : <Tag className="w-3 h-3" />}
+                  {tagging ? "Tagging…" : "Auto-tag topics"}
+                </button>
+              )}
             </div>
           </div>
 

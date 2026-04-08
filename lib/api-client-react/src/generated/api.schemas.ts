@@ -204,6 +204,7 @@ export interface Review {
   reviewDate: string;
   responseStatus: ReviewResponseStatus;
   sentimentScore?: number | null;
+  tags?: string[] | null;
   locationName: string;
   createdAt: string;
 }

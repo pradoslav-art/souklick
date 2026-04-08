@@ -3,6 +3,7 @@ import { eq, and, lte, gte, desc, asc, sql, count, inArray } from "drizzle-orm";
 import { db, reviewsTable, locationsTable, responsesTable, usersTable } from "@workspace/db";
 import { requireAuth } from "../middlewares/auth";
 import { sendReviewAlerts } from "../lib/email";
+import { tagReview } from "./ai";
 
 const router: IRouter = Router();
 
@@ -19,6 +20,7 @@ function formatReview(review: typeof reviewsTable.$inferSelect, locationName: st
     reviewDate: review.reviewDate,
     responseStatus: review.responseStatus,
     sentimentScore: review.sentimentScore ? Number(review.sentimentScore) : null,
+    tags: review.tags ?? [],
     locationName,
     createdAt: review.createdAt,
   };
@@ -189,6 +191,11 @@ router.post("/reviews", requireAuth, async (req, res): Promise<void> => {
     }
   } catch (err: any) {
     console.error("Email alert query failed:", err?.message);
+  }
+
+  // Auto-tag in background (non-blocking)
+  if (reviewText) {
+    tagReview(review.id, reviewText).catch(() => {});
   }
 
   res.status(201).json(formatReview(review, location.name));

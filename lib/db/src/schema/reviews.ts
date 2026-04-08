@@ -18,6 +18,7 @@ export const reviewsTable = pgTable("reviews", {
   reviewDate: timestamp("review_date", { withTimezone: true }).notNull(),
   responseStatus: responseStatusEnum("response_status").notNull().default("pending"),
   sentimentScore: numeric("sentiment_score", { precision: 4, scale: 3 }),
+  tags: text("tags").array(),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });

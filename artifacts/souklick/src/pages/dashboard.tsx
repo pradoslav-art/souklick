@@ -60,6 +60,7 @@ export default function Dashboard() {
   const [locationId, setLocationId] = useState<string>("all");
   const [rating, setRating] = useState<string>("all");
   const [status, setStatus] = useState<GetReviewsStatus | "all">("all");
+  const [tag, setTag] = useState<string>("all");
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
 
@@ -79,17 +80,21 @@ export default function Dashboard() {
   });
 
   const reviews = reviewData?.reviews || [];
-  const hasActiveFilters = platform !== "all" || locationId !== "all" || rating !== "all" || status !== "all" || !!search;
+  const hasActiveFilters = platform !== "all" || locationId !== "all" || rating !== "all" || status !== "all" || tag !== "all" || !!search;
 
   const filteredReviews = useMemo(() => {
-    if (!search) return reviews;
+    let result = reviews;
+    if (tag !== "all") {
+      result = result.filter(r => (r.tags ?? []).includes(tag));
+    }
+    if (!search) return result;
     const lowerSearch = search.toLowerCase();
-    return reviews.filter(r =>
+    return result.filter(r =>
       r.reviewerName.toLowerCase().includes(lowerSearch) ||
       (r.reviewText && r.reviewText.toLowerCase().includes(lowerSearch)) ||
       r.locationName.toLowerCase().includes(lowerSearch)
     );
-  }, [reviews, search]);
+  }, [reviews, search, tag]);
 
   return (
     <div className="p-4 sm:p-8 max-w-7xl mx-auto">
@@ -174,6 +179,23 @@ export default function Dashboard() {
               <SelectItem value="skipped">Skipped</SelectItem>
             </SelectContent>
           </Select>
+
+          <Select value={tag} onValueChange={(v) => { setTag(v); setPage(1); }}>
+            <SelectTrigger className="w-full md:w-[140px] bg-background">
+              <SelectValue placeholder="Topic" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Topics</SelectItem>
+              <SelectItem value="food">Food</SelectItem>
+              <SelectItem value="service">Service</SelectItem>
+              <SelectItem value="wait time">Wait Time</SelectItem>
+              <SelectItem value="ambiance">Ambiance</SelectItem>
+              <SelectItem value="value">Value</SelectItem>
+              <SelectItem value="cleanliness">Cleanliness</SelectItem>
+              <SelectItem value="staff">Staff</SelectItem>
+              <SelectItem value="delivery">Delivery</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
@@ -216,6 +238,7 @@ export default function Dashboard() {
                   setLocationId("all");
                   setRating("all");
                   setStatus("all");
+                  setTag("all");
                   setSearch("");
                 }}
               >

@@ -7,6 +7,41 @@ import { logger } from "../lib/logger";
 
 const router: IRouter = Router();
 
+export const VALID_TAGS = ["food", "service", "wait time", "ambiance", "value", "cleanliness", "staff", "delivery"] as const;
+export type ReviewTag = typeof VALID_TAGS[number];
+
+export async function tagReview(reviewId: string, reviewText: string): Promise<void> {
+  if (!reviewText?.trim()) return;
+
+  try {
+    const message = await anthropic.messages.create({
+      model: "claude-haiku-4-5-20251001",
+      max_tokens: 100,
+      messages: [{
+        role: "user",
+        content: `Classify this restaurant review into relevant topic tags.
+
+Available tags: ${VALID_TAGS.join(", ")}
+
+Review: "${reviewText}"
+
+Return ONLY a JSON array of matching tags (e.g. ["food", "service"]). Return [] if nothing clearly applies. No explanation.`,
+      }],
+    });
+
+    const raw = message.content[0].type === "text" ? message.content[0].text.trim() : "[]";
+    const parsed: unknown = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return;
+
+    const tags = parsed.filter((t): t is ReviewTag => VALID_TAGS.includes(t as ReviewTag));
+    if (tags.length === 0) return;
+
+    await db.update(reviewsTable).set({ tags }).where(eq(reviewsTable.id, reviewId));
+  } catch (err) {
+    logger.error({ err, reviewId }, "Review tagging failed");
+  }
+}
+
 const anthropic = new Anthropic({
   apiKey: process.env.AI_INTEGRATIONS_ANTHROPIC_API_KEY || process.env.ANTHROPIC_API_KEY || "dummy-key",
   baseURL: process.env.AI_INTEGRATIONS_ANTHROPIC_BASE_URL,
@@ -104,6 +139,41 @@ Write only the response text, nothing else.`;
     logger.error({ err }, "AI response generation failed");
     res.status(500).json({ error: "Failed to generate response", message: "AI service unavailable" });
   }
+});
+
+router.post("/ai/tag-review", requireAuth, async (req, res): Promise<void> => {
+  const { reviewId } = req.body;
+
+  if (!reviewId) {
+    res.status(400).json({ error: "reviewId is required" });
+    return;
+  }
+
+  const [review] = await db.select().from(reviewsTable).where(eq(reviewsTable.id, reviewId));
+  if (!review) {
+    res.status(404).json({ error: "Review not found" });
+    return;
+  }
+
+  const [location] = await db
+    .select()
+    .from(locationsTable)
+    .where(and(eq(locationsTable.id, review.locationId), eq(locationsTable.organizationId, req.session.organizationId!)));
+
+  if (!location) {
+    res.status(403).json({ error: "Access denied" });
+    return;
+  }
+
+  if (!review.reviewText?.trim()) {
+    res.json({ tags: [] });
+    return;
+  }
+
+  await tagReview(reviewId, review.reviewText);
+
+  const [updated] = await db.select().from(reviewsTable).where(eq(reviewsTable.id, reviewId));
+  res.json({ tags: updated?.tags ?? [] });
 });
 
 export default router;

@@ -1,13 +1,14 @@
 import { useState } from "react";
 import { format, differenceInDays } from "date-fns";
 import { SiGoogle, SiZomato, SiTripadvisor } from "react-icons/si";
-import { Star, Clock, FileText, CheckCircle, ExternalLink, Bot, PenLine, AlertCircle } from "lucide-react";
-import { 
-  Review, 
-  ReviewPlatform, 
+import { Star, Clock, FileText, CheckCircle, ExternalLink, Bot, PenLine, AlertCircle, Tag, Loader2 } from "lucide-react";
+import {
+  Review,
+  ReviewPlatform,
   useUpdateReviewStatus,
   getGetReviewsQueryKey,
-  getGetPriorityCountQueryKey
+  getGetPriorityCountQueryKey,
+  getGetReviewQueryKey
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -18,6 +19,26 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useToast } from "@/hooks/use-toast";
 import ReviewModal from "./review-modal";
+
+const TAG_COLOURS: Record<string, string> = {
+  food:        "bg-orange-100 text-orange-800 border-orange-200",
+  service:     "bg-blue-100 text-blue-800 border-blue-200",
+  "wait time": "bg-yellow-100 text-yellow-800 border-yellow-200",
+  ambiance:    "bg-purple-100 text-purple-800 border-purple-200",
+  value:       "bg-green-100 text-green-800 border-green-200",
+  cleanliness: "bg-cyan-100 text-cyan-800 border-cyan-200",
+  staff:       "bg-indigo-100 text-indigo-800 border-indigo-200",
+  delivery:    "bg-pink-100 text-pink-800 border-pink-200",
+};
+
+function TagBadge({ tag }: { tag: string }) {
+  const colours = TAG_COLOURS[tag] ?? "bg-muted text-muted-foreground border-border";
+  return (
+    <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold border ${colours}`}>
+      {tag}
+    </span>
+  );
+}
 
 interface ReviewCardProps {
   review: Review;
@@ -36,9 +57,34 @@ export const PlatformIcon = ({ platform, className = "w-4 h-4" }: { platform: Re
 export default function ReviewCard({ review, isPriority = false }: ReviewCardProps) {
   const [modalOpen, setModalOpen] = useState(false);
   const [expanded, setExpanded] = useState(false);
+  const [tagging, setTagging] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const updateStatus = useUpdateReviewStatus();
+
+  const tags = review.tags ?? [];
+  const hasText = !!review.reviewText?.trim();
+  const showTagButton = hasText && tags.length === 0 && !tagging;
+
+  const handleAutoTag = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setTagging(true);
+    try {
+      const res = await fetch("/api/ai/tag-review", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reviewId: review.id }),
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error();
+      queryClient.invalidateQueries({ queryKey: getGetReviewsQueryKey() });
+      queryClient.invalidateQueries({ queryKey: getGetReviewQueryKey(review.id) });
+    } catch {
+      toast({ variant: "destructive", title: "Tagging failed", description: "Could not auto-tag this review." });
+    } finally {
+      setTagging(false);
+    }
+  };
 
   const daysWaiting = differenceInDays(new Date(), new Date(review.reviewDate));
   
@@ -176,6 +222,26 @@ export default function ReviewCard({ review, isPriority = false }: ReviewCardPro
                   )}
                 </div>
               </div>
+
+              {/* Tags */}
+              {(tags.length > 0 || showTagButton || tagging) && (
+                <div className="flex items-center flex-wrap gap-1.5 mb-4">
+                  {tags.map((t: string) => <TagBadge key={t} tag={t} />)}
+                  {tagging && (
+                    <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground">
+                      <Loader2 className="w-3 h-3 animate-spin" /> tagging…
+                    </span>
+                  )}
+                  {showTagButton && (
+                    <button
+                      onClick={handleAutoTag}
+                      className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium border border-dashed border-muted-foreground/40 text-muted-foreground hover:border-primary/50 hover:text-primary transition-colors"
+                    >
+                      <Tag className="w-2.5 h-2.5" /> Auto-tag
+                    </button>
+                  )}
+                </div>
+              )}
 
               <div className="flex items-center justify-between pt-4 border-t border-border mt-auto">
                 <div className="text-sm text-muted-foreground flex items-center gap-2">

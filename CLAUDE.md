@@ -436,3 +436,47 @@ Your job is to be the developer they would hire if they could afford a great one
 - **Email system still untested end-to-end** — `RESEND_API_KEY` and `EMAIL_FROM` must be set in Replit Secrets, and a custom sending domain configured in Resend for production.
 
 **No corrections from user this session.**
+
+---
+
+### Session: 2026-04-08
+
+**What we did:**
+
+1. **Competitor tracking** (`#4`) — monitor rival Google ratings over time.
+   - Two new DB tables: `competitors` and `competitor_snapshots` (created directly via SQL)
+   - `lib/google-places.ts` — fetches rating + review count from Google Places API (`GOOGLE_PLACES_API_KEY` required)
+   - `lib/competitor-refresh.ts` — daily batch refresh for all competitors
+   - `routes/competitors.ts` — CRUD: add/delete competitors, manual refresh, get history
+   - `components/competitors-section.tsx` — comparison cards + Recharts rating history line chart on location detail page
+   - Daily refresh wired into existing scheduler
+
+2. **Weekly digest email** (`#5`) — Monday morning summary per location.
+   - `lib/weekly-digest.ts` — Monday-only check, skips orgs with zero new reviews that week
+   - `lib/email.ts` — `sendWeeklyDigestEmail()`: one card per location (new reviews, avg rating, response rate colour-coded), red "Needs attention" block for ≤3★ reviews
+
+3. **QR code generator** (`#6`) — printable Google review link per location.
+   - `components/qr-code-modal.tsx` — `qrcode.react`, Print popup auto-triggers browser print, Download saves PNG
+   - "QR Code" button in location header when Google Place ID is set
+
+4. **SMS / WhatsApp alerts** (`#7`) — Twilio-powered review alerts.
+   - `notificationPhone`, `notificationSms`, `notificationWhatsapp` columns added to users
+   - `lib/sms.ts` — `sendSmsAlert()` and `sendWhatsAppAlert()` via Twilio
+   - Review alert trigger updated to fire SMS/WhatsApp alongside email
+   - Notifications settings page updated with phone field + two toggles
+   - **Requires:** `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_PHONE_NUMBER` in Secrets
+
+5. **Public review widget** (`#8`) — embeddable snippet for customer websites.
+   - `widgetToken` column on locations (generated on demand)
+   - `GET /api/widget/:token` — public CORS-open, returns top 5 reviews rated 4★+
+   - `GET /widget.js` — self-contained embed script, `APP_URL` baked in at serve time
+   - `components/widget-embed.tsx` — embed snippet with copy button on location detail page
+
+**All 8 backlog items are now complete.**
+
+**Secrets needed for new features:**
+- `GOOGLE_PLACES_API_KEY` — competitor rating auto-fetch
+- `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_PHONE_NUMBER` — SMS/WhatsApp alerts
+- WhatsApp requires the Twilio number to be a WhatsApp Business number (or Twilio sandbox for testing)
+
+**No corrections from user this session.**

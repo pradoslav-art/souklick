@@ -20,6 +20,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import { VisuallyHidden } from "@/components/ui/visually-hidden";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -31,7 +32,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { PlatformIcon } from "./review-card";
+import { SiGoogle, SiZomato, SiTripadvisor } from "react-icons/si";
 
 interface ReviewModalProps {
   reviewId: string;
@@ -49,6 +50,19 @@ const TAG_COLOURS: Record<string, string> = {
   staff:       "bg-indigo-100 text-indigo-800 border-indigo-200",
   delivery:    "bg-pink-100 text-pink-800 border-pink-200",
 };
+
+function PlatformIcon({ platform, className = "w-4 h-4" }: { platform: string; className?: string }) {
+  switch (platform) {
+    case "google":
+      return <SiGoogle className={`text-[#4285F4] ${className}`} />;
+    case "zomato":
+      return <SiZomato className={`text-[#E23744] ${className}`} />;
+    case "tripadvisor":
+      return <SiTripadvisor className={`text-[#00AF87] ${className}`} />;
+    default:
+      return <Check className={className} />;
+  }
+}
 
 export default function ReviewModal({ reviewId, open, onOpenChange }: ReviewModalProps) {
   const { toast } = useToast();
@@ -217,8 +231,12 @@ export default function ReviewModal({ reviewId, open, onOpenChange }: ReviewModa
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-full sm:max-w-2xl md:max-w-3xl p-0 overflow-hidden gap-0 border-border mx-3 sm:mx-auto">
-        <div className="bg-muted/40 p-6 border-b border-border flex items-start justify-between">
+      <DialogContent className="max-w-[calc(100vw-1.5rem)] sm:max-w-2xl md:max-w-3xl p-0 overflow-hidden gap-0 border-border mx-3 sm:mx-auto max-h-[calc(100dvh-1.5rem)]">
+        <VisuallyHidden>
+          <DialogTitle>Review response editor</DialogTitle>
+          <DialogDescription>Review the customer feedback and draft or approve a response.</DialogDescription>
+        </VisuallyHidden>
+        <div className="bg-muted/40 p-4 sm:p-6 border-b border-border flex items-start justify-between">
           <div className="flex items-start gap-4">
             <Avatar className="h-12 w-12 border bg-background shadow-sm">
               <AvatarFallback className="bg-primary/10 text-primary text-lg font-bold">
@@ -248,7 +266,7 @@ export default function ReviewModal({ reviewId, open, onOpenChange }: ReviewModa
           </div>
         </div>
 
-        <div className="p-6">
+        <div className="p-4 sm:p-6 overflow-y-auto max-h-[calc(100dvh-11rem)]">
           <div className="mb-6">
             <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-wider mb-2">Customer Review</h3>
             <div className="bg-card border border-border p-4 rounded-xl text-foreground text-[15px] leading-relaxed shadow-sm">
@@ -294,9 +312,9 @@ export default function ReviewModal({ reviewId, open, onOpenChange }: ReviewModa
           )}
 
           <div className="space-y-3">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-wider">Your Response</h3>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 {draftText && (
                   <Button
                     variant="outline"
@@ -386,16 +404,16 @@ export default function ReviewModal({ reviewId, open, onOpenChange }: ReviewModa
         </div>
 
         {!isResponded && (
-          <div className="bg-muted/40 p-4 border-t border-border flex items-center justify-between">
-            <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={isWorking}>
+          <div className="bg-muted/40 p-4 border-t border-border flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={isWorking} className="w-full sm:w-auto">
               Cancel
             </Button>
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
               <Button 
                 variant="outline" 
                 onClick={handleSaveDraft}
                 disabled={!draftText.trim() || isWorking}
-                className="gap-2"
+                className="gap-2 w-full sm:w-auto"
               >
                 {createDraft.isPending || updateDraft.isPending ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
@@ -407,7 +425,7 @@ export default function ReviewModal({ reviewId, open, onOpenChange }: ReviewModa
               <Button
                 onClick={handleApprove}
                 disabled={!draftText.trim() || isWorking}
-                className="gap-2 font-semibold shadow-md"
+                className="gap-2 font-semibold shadow-md w-full sm:w-auto"
               >
                 {approveResponse.isPending ? (
                   <>

@@ -205,7 +205,7 @@ export default function LocationDetail({ locationId }: LocationDetailProps) {
           </div>
 
           {/* Stats row */}
-          <div className="flex flex-wrap items-center gap-4 sm:gap-6 mt-5 p-4 bg-card border rounded-xl">
+          <div className="flex flex-wrap items-center gap-4 sm:gap-6 mt-5 p-4 bg-card border rounded-xl shadow-md">
             <div className="flex items-center gap-2">
               <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
               <span className="font-bold">{location.averageRating?.toFixed(1) ?? "—"}</span>

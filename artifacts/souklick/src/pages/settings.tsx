@@ -62,7 +62,7 @@ export default function Settings({ tab = "profile" }: SettingsProps) {
           </TabsTrigger>
         </TabsList>
 
-        <div className="bg-card border border-border rounded-xl shadow-sm overflow-hidden">
+        <div className="bg-card border border-border rounded-xl shadow-md overflow-hidden">
           <TabsContent value="profile" className="m-0 p-0 outline-none">
             <ProfileSettings />
           </TabsContent>

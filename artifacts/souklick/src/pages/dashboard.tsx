@@ -111,7 +111,7 @@ export default function Dashboard() {
         </Link>
       </div>
 
-      <div className="bg-card border border-border rounded-xl shadow-sm mb-6 p-4">
+      <div className="bg-card border border-border rounded-xl shadow-md mb-6 p-4">
         {/* Search */}
         <div className="relative mb-3">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />

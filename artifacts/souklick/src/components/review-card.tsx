@@ -118,10 +118,10 @@ export default function ReviewCard({ review, isPriority = false }: ReviewCardPro
   return (
     <>
       <Card
-        className={`overflow-hidden transition-all duration-200 hover:shadow-md cursor-pointer ${
+        className={`overflow-hidden transition-all duration-200 hover:shadow-lg cursor-pointer ${
           isPriority
-            ? 'border border-destructive/40 shadow-sm'
-            : `border border-border border-l-4 ${review.rating >= 4 ? 'border-l-green-400' : review.rating === 3 ? 'border-l-amber-400' : 'border-l-red-400'}`
+            ? 'border border-destructive/40 shadow-md'
+            : `border border-border border-l-4 shadow-md ${review.rating >= 4 ? 'border-l-green-400' : review.rating === 3 ? 'border-l-amber-400' : 'border-l-red-400'}`
         }`}
         onClick={() => setModalOpen(true)}
       >

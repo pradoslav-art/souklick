@@ -234,7 +234,7 @@ export default function Locations() {
             return (
               <div
                 key={location.id}
-                className={`rounded-xl border bg-card overflow-hidden transition-all hover:shadow-md ${needsAttention && pending > 0 ? "border-destructive/30" : "border-border"}`}
+                className={`rounded-xl border bg-card overflow-hidden transition-all shadow-md hover:shadow-lg ${needsAttention && pending > 0 ? "border-destructive/30" : "border-border"}`}
               >
                 {/* Header */}
                 <div className={`p-5 border-b ${needsAttention && pending > 0 ? "bg-destructive/5 border-destructive/20" : "bg-muted/30 border-border"}`}>

@@ -85,7 +85,7 @@ html, body {
   --elevate-2: rgba(0,0,0, .06);
 
   /* Core palette */
-  --background: 240 6% 85%;          /* #D8D8DE — dark page grey */
+  --background: 240 5% 96%;          /* #F5F5F7 — Apple page grey */
   --foreground: 240 2% 11%;          /* #1A1A1C — near-black text */
   --border: 240 5% 82%;              /* #CFCFD6 — visible border */
   --input: 240 5% 91%;

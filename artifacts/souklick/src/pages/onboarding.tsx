@@ -104,7 +104,7 @@ export default function Onboarding() {
             description: "Welcome to your command center.",
             className: "bg-green-50 border-green-200"
           });
-          setLocation("/");
+          setLocation("/dashboard");
         },
         onError: () => {
           toast({ variant: "destructive", title: "Error", description: "Failed to save settings" });

@@ -45,7 +45,7 @@ export default function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
   };
 
   const navItems = [
-    { name: "Dashboard", href: "/", icon: LayoutDashboard },
+    { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
     {
       name: "Priority Queue",
       href: "/priority",
@@ -90,7 +90,7 @@ export default function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
       {/* Nav */}
       <nav className="flex-1 px-3 space-y-0.5 overflow-y-auto">
         {navItems.map((item) => {
-          const isActive = location === item.href || (item.href !== "/" && location.startsWith(item.href));
+          const isActive = location === item.href || (item.href !== "/dashboard" && location.startsWith(item.href));
           return (
             <Link key={item.name} href={item.href} onClick={handleNavClick}>
               <div

@@ -77,7 +77,7 @@ router.post("/ai/generate-response", requireAuth, async (req, res): Promise<void
     .where(eq(organizationsTable.id, req.session.organizationId!));
 
   const isNegative = review.rating <= 3;
-  const targetLength = isNegative ? "150-250 words" : "50-100 words";
+  const hasReviewText = !!review.reviewText?.trim();
 
   const formality = org?.brandVoiceFormality ?? "balanced";
   const emojiUsage = org?.brandVoiceEmojis ?? "sometimes";
@@ -85,37 +85,47 @@ router.post("/ai/generate-response", requireAuth, async (req, res): Promise<void
   const examples = org?.brandVoiceExamples ?? [];
 
   const examplesText = examples.length > 0
-    ? `\n\nHere are examples of our brand's response style:\n${examples.map((e, i) => `Example ${i + 1}: "${e}"`).join("\n")}`
+    ? `\nExamples of how we write responses (match this style closely):\n${examples.map((e, i) => `Example ${i + 1}: "${e}"`).join("\n")}`
     : "";
 
-  const prompt = `You are writing a review response for "${location.name}".
+  const lengthGuide = !hasReviewText
+    ? "2–3 sentences only — there is no review text to reference so keep it brief"
+    : isNegative
+    ? "150–220 words — thorough and genuine, but not an essay"
+    : "60–100 words — warm and specific, but concise";
 
-Review details:
-- Rating: ${review.rating}/5 stars
+  const prompt = `You are a real manager at "${location.name}" writing a personal reply to a customer review. Write exactly as a thoughtful human would — genuine, specific to what was said, never robotic.
+
+REVIEW:
+- Stars: ${review.rating}/5
 - Reviewer: ${review.reviewerName}
-- Review: "${review.reviewText ?? "(No text provided, rating only)"}"
+- Text: "${review.reviewText ?? "(no text — star rating only)"}"
 - Platform: ${review.platform}
-${userNotes ? `- Manager's notes: ${userNotes}` : ""}
+${userNotes ? `- Internal notes from manager: ${userNotes}` : ""}
 
-Brand voice guidelines:
-- Formality level: ${formality} (${formality === "casual" ? "conversational and warm" : formality === "professional" ? "formal and polished" : "balanced — professional but approachable"})
-- Emoji usage: ${emojiUsage} (${emojiUsage === "never" ? "do NOT use any emojis" : emojiUsage === "often" ? "use emojis thoughtfully throughout" : "use emojis sparingly if appropriate"})
-- Sign off with: "${signoff}"${examplesText}
+BRAND VOICE:
+- Tone: ${formality === "casual" ? "casual and warm — write like you're talking to a regular, not composing an email" : formality === "professional" ? "professional and composed — polished but still human" : "balanced — friendly and approachable, but not overly casual"}
+- Emojis: ${emojiUsage === "never" ? "none whatsoever" : emojiUsage === "often" ? "use naturally where they fit the tone" : "one at most, only if it genuinely fits"}
+- End with this sign-off: "${signoff}"
+${examplesText}
 
-Instructions:
-- Write a ${targetLength} response
-- ${isNegative ? "Acknowledge the specific issue mentioned, apologize sincerely, explain any action being taken or improvement made, and offer a soft recovery (invitation to return or contact directly)" : "Express genuine gratitude for their kind words and encourage them to visit again"}
-- Address the specific points mentioned in the review — be personal, not generic
-- Sound like a real human manager, not a corporate template
-- Do NOT start with "Dear" or "Hello" — start directly
-- Match the brand voice guidelines exactly
+RULES — every one is mandatory:
+1. OPENING: Hook on something SPECIFIC from the review — a detail they mentioned, a feeling they expressed, a person they named. NEVER open with "Thank you for your review", "Thank you for taking the time", "We appreciate your feedback", or any variation. Start mid-thought if needed.
+2. SPECIFICITY: If the reviewer mentioned a staff name, a specific product, a specific problem — address it directly by name. Vague responses feel fake.
+3. REVIEWER NAME: Use their first name once, naturally. Don't repeat it. Don't force it.
+4. LENGTH: ${lengthGuide}
+5. ${isNegative
+    ? "NEGATIVE REVIEW HANDLING: Acknowledge the exact issue they described — don't be vague or deflect. Take ownership without making excuses. One genuine apology is enough — don't grovel. Say what is being done or invite them to contact you directly. Leave the door open without begging."
+    : "POSITIVE REVIEW HANDLING: Match their energy. If they're enthusiastic, be warm. If they're brief, be brief. Don't pad the response with filler. Make them feel heard, not processed."}
+6. BANNED PHRASES — never use any of these: "valued customer", "valued guest", "your feedback is important", "your feedback is invaluable", "we strive to", "we endeavour to", "going forward", "at ${location.name} we", "thank you for your patronage", "we look forward to serving you", "do not hesitate to", "kind regards", "we hope to see you again soon", "it was a pleasure serving you".
+7. TONE CHECK: Read it back. If it sounds like it came from a template or a robot, rewrite it. It must sound like a real person typed it.
 
-Write only the response text, nothing else.`;
+Write only the response text. Nothing else.`;
 
   try {
     const message = await anthropic.messages.create({
       model: "claude-opus-4-5",
-      max_tokens: 500,
+      max_tokens: 600,
       messages: [
         {
           role: "user",

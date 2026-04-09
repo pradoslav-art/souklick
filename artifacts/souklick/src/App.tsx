@@ -8,6 +8,7 @@ import { Loader2 } from "lucide-react";
 
 import AppLayout from "@/components/layout/app-layout";
 
+const Landing = lazy(() => import("@/pages/landing"));
 const Login = lazy(() => import("@/pages/login"));
 const Dashboard = lazy(() => import("@/pages/dashboard"));
 const Priority = lazy(() => import("@/pages/priority"));
@@ -96,7 +97,7 @@ function Router() {
 
   useEffect(() => {
     if (location === "/login" && user && !isLoading) {
-      setLocation("/");
+      setLocation("/dashboard");
     }
   }, [location, user, isLoading, setLocation]);
 
@@ -109,8 +110,11 @@ function Router() {
         <Route path="/reset-password" component={ResetPassword} />
         <Route path="/accept-invite" component={AcceptInvite} />
 
+        {/* Public landing page */}
+        <Route path="/" component={Landing} />
+
         {/* Protected Routes */}
-        <Route path="/">
+        <Route path="/dashboard">
           <ProtectedRoute component={Dashboard} />
         </Route>
         <Route path="/priority">

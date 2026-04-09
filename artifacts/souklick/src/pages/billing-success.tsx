@@ -73,7 +73,7 @@ export default function BillingSuccess() {
         <p className="text-muted-foreground text-sm mb-8">
           Your subscription is now active. Welcome to Souklick — let's go manage some reviews.
         </p>
-        <Button className="w-full" onClick={() => setLocation("/")}>
+        <Button className="w-full" onClick={() => setLocation("/dashboard")}>
           Go to dashboard
         </Button>
       </div>

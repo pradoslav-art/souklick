@@ -215,9 +215,33 @@ _(Sessions 2026-03-31 through 2026-04-04 archived in CLAUDE_ARCHIVE.md)_
 - `souklick.com` confirmed working (Replit agent fixed the deployment)
 - Debug logging and 503 fallback removed from `app.ts`
 
-**Still pending:**
-- Set `APP_URL=https://souklick.com` in Replit Secrets
-- Stripe Customer Portal — subscribers still have no self-serve billing management
+**All resolved.**
+
+---
+
+### Session: 2026-04-09
+
+**What we did:**
+
+1. **Confirmed souklick.com is live** — Replit agent fixed the deployment last session. Cleaned up debug logging and 503 fallback from `app.ts`, removed unused `fs` import.
+
+2. **Set APP_URL** — user set `APP_URL=https://souklick.com` in Replit Secrets so the widget script uses the correct URL.
+
+3. **Updated favicon** — replaced plain red square with orange gradient rounded square + bold white "S" matching the sidebar logo. Added `?v=2` cache-buster to `index.html`.
+
+4. **Stripe Customer Portal confirmed working** — backend endpoint was already built. User activated the portal in Stripe dashboard (test mode first, then live). Button in Settings → Billing works end-to-end.
+
+5. **Fixed restaurant-specific language throughout the app** — app is now generic for any business type.
+   - Sign-up: "Restaurant Group Name" → "Business Name"
+   - Locations: removed all "restaurant location" references
+   - Placeholders: "Saffron Kitchen Downtown/LLC" → generic examples
+   - Brand Voice: example review/responses no longer food-specific
+   - Platform instructions: "your restaurant's Zomato/TripAdvisor page" → "your business's"
+   - AI tags: removed `food`, `ambiance`; added `quality`, `communication`
+   - AI prompt: "restaurant review" → "business review"
+   - Dashboard topic filter updated to match new tags
+
+**No corrections from user this session.**
 
 ---
 

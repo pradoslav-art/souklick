@@ -42,11 +42,14 @@ function TagBadge({ tag }: { tag: string }) {
 interface ReviewCardProps {
   review: Review;
   isPriority?: boolean;
+  selected?: boolean;
+  onToggleSelect?: (id: string) => void;
+  selectMode?: boolean;
 }
 
 export { PlatformIcon } from "./platform-icon";
 
-export default function ReviewCard({ review, isPriority = false }: ReviewCardProps) {
+export default function ReviewCard({ review, isPriority = false, selected = false, onToggleSelect, selectMode = false }: ReviewCardProps) {
   const [modalOpen, setModalOpen] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [tagging, setTagging] = useState(false);
@@ -118,14 +121,28 @@ export default function ReviewCard({ review, isPriority = false }: ReviewCardPro
   return (
     <>
       <Card
-        className={`overflow-hidden transition-all duration-200 hover:shadow-lg cursor-pointer ${
-          isPriority
-            ? 'border border-destructive/40 shadow-md'
-            : `border border-border border-l-4 shadow-md ${review.rating >= 4 ? 'border-l-green-400' : review.rating === 3 ? 'border-l-amber-400' : 'border-l-red-400'}`
+        className={`overflow-hidden transition-all duration-200 hover:shadow-lg cursor-pointer relative ${
+          selected
+            ? 'ring-2 ring-primary border-primary shadow-md'
+            : isPriority
+              ? 'border border-destructive/40 shadow-md'
+              : `border border-border border-l-4 shadow-md ${review.rating >= 4 ? 'border-l-green-400' : review.rating === 3 ? 'border-l-amber-400' : 'border-l-red-400'}`
         }`}
-        onClick={() => setModalOpen(true)}
+        onClick={() => selectMode && onToggleSelect ? onToggleSelect(review.id) : setModalOpen(true)}
       >
         <CardContent className="p-0">
+          {onToggleSelect && (selectMode || selected) && (
+            <div className="absolute top-3 right-3 z-10">
+              <div
+                className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
+                  selected ? 'bg-primary border-primary' : 'bg-background border-muted-foreground/40'
+                }`}
+                onClick={(e) => { e.stopPropagation(); onToggleSelect(review.id); }}
+              >
+                {selected && <CheckCircle className="w-3.5 h-3.5 text-white" />}
+              </div>
+            </div>
+          )}
           <div className="flex flex-col md:flex-row">
             
             {/* Left sidebar - Meta */}
@@ -262,18 +279,18 @@ export default function ReviewCard({ review, isPriority = false }: ReviewCardPro
                       <Button variant="ghost" size="sm" onClick={handleMarkAsRead} className="hover:bg-muted">
                         Mark Read
                       </Button>
-                      <Button size="sm" className="gap-1.5 shadow-sm">
+                      <Button size="sm" className="gap-1.5 shadow-sm" onClick={(e) => { e.stopPropagation(); setModalOpen(true); }}>
                         <Bot className="w-4 h-4" /> Draft Response
                       </Button>
                     </>
                   )}
                   {review.responseStatus === "draft_saved" && (
-                    <Button size="sm" className="gap-1.5 shadow-sm">
+                    <Button size="sm" className="gap-1.5 shadow-sm" onClick={(e) => { e.stopPropagation(); setModalOpen(true); }}>
                       <PenLine className="w-4 h-4" /> Review Draft
                     </Button>
                   )}
                   {review.responseStatus === "responded" && (
-                    <Button variant="outline" size="sm" className="gap-1.5">
+                    <Button variant="outline" size="sm" className="gap-1.5" onClick={(e) => { e.stopPropagation(); setModalOpen(true); }}>
                       <ExternalLink className="w-4 h-4" /> View Response
                     </Button>
                   )}

@@ -224,6 +224,126 @@ router.post("/reviews", requireAuth, async (req, res): Promise<void> => {
   res.status(201).json(formatReview(review, location.name));
 });
 
+router.get("/reviews/export", requireAuth, async (req, res): Promise<void> => {
+  const { locationId, platform, rating, status } = req.query;
+
+  const orgLocations = await db
+    .select({ id: locationsTable.id, name: locationsTable.name })
+    .from(locationsTable)
+    .where(eq(locationsTable.organizationId, req.session.organizationId!));
+
+  if (orgLocations.length === 0) {
+    res.setHeader("Content-Type", "text/csv");
+    res.setHeader("Content-Disposition", "attachment; filename=reviews.csv");
+    res.send("No reviews found");
+    return;
+  }
+
+  const locationMap = new Map(orgLocations.map((l) => [l.id, l.name]));
+  let allowedLocationIds = orgLocations.map((l) => l.id);
+
+  if (locationId && typeof locationId === "string" && locationMap.has(locationId)) {
+    allowedLocationIds = [locationId];
+  }
+
+  const conditions = [inArray(reviewsTable.locationId, allowedLocationIds)];
+  if (platform && typeof platform === "string") conditions.push(eq(reviewsTable.platform, platform as any));
+  if (rating && typeof rating === "string") conditions.push(eq(reviewsTable.rating, parseInt(rating, 10)));
+  if (status && typeof status === "string") conditions.push(eq(reviewsTable.responseStatus, status as any));
+
+  const reviews = await db
+    .select()
+    .from(reviewsTable)
+    .where(and(...conditions))
+    .orderBy(desc(reviewsTable.reviewDate));
+
+  const escape = (v: string | null | undefined) => {
+    if (v == null) return "";
+    const s = String(v).replace(/"/g, '""');
+    return s.includes(",") || s.includes('"') || s.includes("\n") ? `"${s}"` : s;
+  };
+
+  const header = "Date,Location,Platform,Reviewer,Rating,Status,Review Text,Tags";
+  const rows = reviews.map((r) => [
+    r.reviewDate ? new Date(r.reviewDate).toISOString().split("T")[0] : "",
+    escape(locationMap.get(r.locationId) ?? ""),
+    r.platform,
+    escape(r.reviewerName),
+    r.rating,
+    r.responseStatus,
+    escape(r.reviewText),
+    escape((r.tags ?? []).join("; ")),
+  ].join(","));
+
+  res.setHeader("Content-Type", "text/csv");
+  res.setHeader("Content-Disposition", `attachment; filename=reviews-${new Date().toISOString().split("T")[0]}.csv`);
+  res.send([header, ...rows].join("\n"));
+});
+
+router.post("/reviews/bulk-skip", requireAuth, async (req, res): Promise<void> => {
+  const { reviewIds } = req.body as { reviewIds: string[] };
+
+  if (!Array.isArray(reviewIds) || reviewIds.length === 0) {
+    res.status(400).json({ error: "reviewIds must be a non-empty array" });
+    return;
+  }
+
+  // Verify all reviews belong to this org
+  const orgLocations = await db
+    .select({ id: locationsTable.id })
+    .from(locationsTable)
+    .where(eq(locationsTable.organizationId, req.session.organizationId!));
+
+  const locationIds = orgLocations.map((l) => l.id);
+
+  await db
+    .update(reviewsTable)
+    .set({ responseStatus: "skipped" })
+    .where(and(inArray(reviewsTable.id, reviewIds), inArray(reviewsTable.locationId, locationIds)));
+
+  res.json({ success: true, count: reviewIds.length });
+});
+
+router.post("/reviews/bulk-respond", requireAuth, async (req, res): Promise<void> => {
+  const { reviewIds, responseText } = req.body as { reviewIds: string[]; responseText: string };
+
+  if (!Array.isArray(reviewIds) || reviewIds.length === 0) {
+    res.status(400).json({ error: "reviewIds must be a non-empty array" });
+    return;
+  }
+  if (!responseText?.trim()) {
+    res.status(400).json({ error: "responseText is required" });
+    return;
+  }
+
+  const orgLocations = await db
+    .select({ id: locationsTable.id })
+    .from(locationsTable)
+    .where(eq(locationsTable.organizationId, req.session.organizationId!));
+
+  const locationIds = orgLocations.map((l) => l.id);
+
+  // Fetch matching reviews
+  const reviews = await db
+    .select()
+    .from(reviewsTable)
+    .where(and(inArray(reviewsTable.id, reviewIds), inArray(reviewsTable.locationId, locationIds)));
+
+  // Insert approved responses for each
+  for (const review of reviews) {
+    await db.insert(responsesTable).values({
+      reviewId: review.id,
+      draftText: responseText,
+      finalText: responseText,
+      draftedBy: req.session.userId ?? null,
+      status: "approved",
+    });
+    await db.update(reviewsTable).set({ responseStatus: "responded" }).where(eq(reviewsTable.id, review.id));
+  }
+
+  res.json({ success: true, count: reviews.length });
+});
+
 router.get("/reviews/:id", requireAuth, async (req, res): Promise<void> => {
   const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
 

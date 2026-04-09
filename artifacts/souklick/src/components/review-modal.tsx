@@ -122,6 +122,7 @@ export default function ReviewModal({ reviewId, open, onOpenChange }: ReviewModa
       {
         onSuccess: (data) => {
           setDraftText(data.draftText);
+          localStorage.setItem("souklick_ai_used", "true");
           toast({ title: "AI Draft Generated", description: "Review and edit the draft before saving." });
         },
         onError: () => {

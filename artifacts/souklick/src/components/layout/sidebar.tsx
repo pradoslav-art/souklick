@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, AlertCircle, MapPin, BarChart3, Settings, LogOut, ShieldCheck, Zap, X, CreditCard } from "lucide-react";
+import { LayoutDashboard, AlertCircle, MapPin, BarChart3, Settings, LogOut, ShieldCheck, Zap, X, CreditCard, LayoutGrid } from "lucide-react";
 import {
   useLogoutUser,
   useGetPriorityCount,
@@ -53,6 +53,7 @@ export default function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
       badge: priorityCount?.count ? priorityCount.count : 0
     },
     { name: "Locations", href: "/locations", icon: MapPin },
+    { name: "Overview", href: "/overview", icon: LayoutGrid },
     { name: "Analytics", href: "/analytics", icon: BarChart3 },
     { name: "Settings", href: "/settings", icon: Settings },
     ...((user as any)?.isAdmin ? [{ name: "Admin", href: "/admin", icon: ShieldCheck }] : []),

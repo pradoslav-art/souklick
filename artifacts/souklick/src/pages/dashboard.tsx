@@ -9,7 +9,7 @@ import {
   GetReviewsPlatform,
   GetReviewsStatus
 } from "@workspace/api-client-react";
-import { Search, SlidersHorizontal, MessageSquare, Loader2, MapPin } from "lucide-react";
+import { Search, SlidersHorizontal, MessageSquare, Loader2, MapPin, CheckSquare, Download } from "lucide-react";
 
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -22,6 +22,8 @@ import {
   SelectValue
 } from "@/components/ui/select";
 import ReviewCard from "@/components/review-card";
+import OnboardingChecklist from "@/components/onboarding-checklist";
+import BulkActionBar from "@/components/bulk-action-bar";
 
 function ReviewCardSkeleton() {
   return (
@@ -63,6 +65,25 @@ export default function Dashboard() {
   const [tag, setTag] = useState<string>("all");
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
+  const handleExport = () => {
+    const params = new URLSearchParams();
+    if (platform !== "all") params.set("platform", platform);
+    if (locationId !== "all") params.set("locationId", locationId);
+    if (rating !== "all") params.set("rating", rating);
+    if (status !== "all") params.set("status", status);
+    window.location.href = `/api/reviews/export?${params.toString()}`;
+  };
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
 
   const { data: locations } = useGetLocations({ query: { queryKey: getGetLocationsQueryKey() } });
 
@@ -103,13 +124,32 @@ export default function Dashboard() {
           <h1 className="text-3xl font-bold tracking-tight mb-1">Unified Inbox</h1>
           <p className="text-muted-foreground">Manage your brand reputation across all locations.</p>
         </div>
-        <Link href="/priority">
-          <Button variant="outline" className="text-destructive border-destructive/30 hover:bg-destructive/10">
-            <MessageSquare className="w-4 h-4 mr-2" />
-            Priority Queue
-          </Button>
-        </Link>
+        <div className="flex items-center gap-2">
+          {filteredReviews.length > 0 && (
+            <Button
+              variant={selectedIds.size > 0 ? "secondary" : "outline"}
+              onClick={() => setSelectedIds(selectedIds.size > 0 ? new Set() : new Set(filteredReviews.map(r => r.id)))}
+            >
+              <CheckSquare className="w-4 h-4 mr-2" />
+              {selectedIds.size > 0 ? `${selectedIds.size} selected` : "Select"}
+            </Button>
+          )}
+          {reviews.length > 0 && (
+            <Button variant="outline" onClick={handleExport}>
+              <Download className="w-4 h-4 mr-2" />
+              Export CSV
+            </Button>
+          )}
+          <Link href="/priority">
+            <Button variant="outline" className="text-destructive border-destructive/30 hover:bg-destructive/10">
+              <MessageSquare className="w-4 h-4 mr-2" />
+              Priority Queue
+            </Button>
+          </Link>
+        </div>
       </div>
+
+      <OnboardingChecklist />
 
       <div className="bg-card border border-border rounded-xl shadow-md mb-6 p-4">
         {/* Search */}
@@ -199,6 +239,13 @@ export default function Dashboard() {
         </div>
       </div>
 
+      {selectedIds.size > 0 && (
+        <BulkActionBar
+          selectedIds={Array.from(selectedIds)}
+          onClear={() => setSelectedIds(new Set())}
+        />
+      )}
+
       <div className="pb-8">
         {isLoading ? (
           <div className="space-y-4">
@@ -249,7 +296,13 @@ export default function Dashboard() {
         ) : (
           <div className="space-y-4">
             {filteredReviews.map((review) => (
-              <ReviewCard key={review.id} review={review} />
+              <ReviewCard
+                key={review.id}
+                review={review}
+                selected={selectedIds.has(review.id)}
+                onToggleSelect={toggleSelect}
+                selectMode={selectedIds.size > 0}
+              />
             ))}
 
             {reviewData?.totalPages && reviewData.totalPages > 1 && (

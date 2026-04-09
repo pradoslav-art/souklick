@@ -178,4 +178,96 @@ router.get("/analytics/platform-breakdown", requireAuth, async (req, res): Promi
   }));
 });
 
+router.get("/analytics/locations", requireAuth, async (req, res): Promise<void> => {
+  const orgLocations = await db
+    .select({ id: locationsTable.id, name: locationsTable.name })
+    .from(locationsTable)
+    .where(eq(locationsTable.organizationId, req.session.organizationId!));
+
+  if (orgLocations.length === 0) {
+    res.json([]);
+    return;
+  }
+
+  const locationIds = orgLocations.map((l) => l.id);
+
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+  const allStats = await db
+    .select({
+      locationId: reviewsTable.locationId,
+      totalReviews: count(reviewsTable.id),
+      avgRating: avg(reviewsTable.rating),
+    })
+    .from(reviewsTable)
+    .where(inArray(reviewsTable.locationId, locationIds))
+    .groupBy(reviewsTable.locationId);
+
+  const recentStats = await db
+    .select({
+      locationId: reviewsTable.locationId,
+      recentReviews: count(reviewsTable.id),
+    })
+    .from(reviewsTable)
+    .where(
+      and(
+        inArray(reviewsTable.locationId, locationIds),
+        sql`${reviewsTable.reviewDate} >= ${thirtyDaysAgo}`
+      )
+    )
+    .groupBy(reviewsTable.locationId);
+
+  const respondedStats = await db
+    .select({
+      locationId: reviewsTable.locationId,
+      responded: count(reviewsTable.id),
+    })
+    .from(reviewsTable)
+    .where(
+      and(
+        inArray(reviewsTable.locationId, locationIds),
+        eq(reviewsTable.responseStatus, "responded")
+      )
+    )
+    .groupBy(reviewsTable.locationId);
+
+  const pendingStats = await db
+    .select({
+      locationId: reviewsTable.locationId,
+      pending: count(reviewsTable.id),
+    })
+    .from(reviewsTable)
+    .where(
+      and(
+        inArray(reviewsTable.locationId, locationIds),
+        eq(reviewsTable.responseStatus, "pending")
+      )
+    )
+    .groupBy(reviewsTable.locationId);
+
+  const recentMap = new Map(recentStats.map((r) => [r.locationId, Number(r.recentReviews)]));
+  const respondedMap = new Map(respondedStats.map((r) => [r.locationId, Number(r.responded)]));
+  const pendingMap = new Map(pendingStats.map((r) => [r.locationId, Number(r.pending)]));
+
+  const statsMap = new Map(allStats.map((s) => [s.locationId, s]));
+
+  const result = orgLocations.map((loc) => {
+    const stats = statsMap.get(loc.id);
+    const total = Number(stats?.totalReviews ?? 0);
+    const responded = respondedMap.get(loc.id) ?? 0;
+    return {
+      locationId: loc.id,
+      locationName: loc.name,
+      totalReviews: total,
+      averageRating: stats?.avgRating ? Math.round(Number(stats.avgRating) * 10) / 10 : 0,
+      responseRate: total > 0 ? Math.round((responded / total) * 100) : 0,
+      pendingReviews: pendingMap.get(loc.id) ?? 0,
+      reviewsLast30Days: recentMap.get(loc.id) ?? 0,
+    };
+  });
+
+  res.json(result);
+});
+
 export default router;

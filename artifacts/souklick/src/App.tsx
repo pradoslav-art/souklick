@@ -15,6 +15,7 @@ const Priority = lazy(() => import("@/pages/priority"));
 const Locations = lazy(() => import("@/pages/locations"));
 const LocationDetail = lazy(() => import("@/pages/location-detail"));
 const Analytics = lazy(() => import("@/pages/analytics"));
+const Overview = lazy(() => import("@/pages/overview"));
 const Settings = lazy(() => import("@/pages/settings"));
 const Onboarding = lazy(() => import("@/pages/onboarding"));
 const AdminDashboard = lazy(() => import("@/pages/admin"));
@@ -125,6 +126,9 @@ function Router() {
         </Route>
         <Route path="/locations/:id">
           {(params) => <ProtectedRoute component={LocationDetail} locationId={params?.id} />}
+        </Route>
+        <Route path="/overview">
+          <ProtectedRoute component={Overview} />
         </Route>
         <Route path="/analytics">
           <ProtectedRoute component={Analytics} />

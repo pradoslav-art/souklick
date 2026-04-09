@@ -312,7 +312,7 @@ export default function Landing() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
 
             {/* Free trial */}
-            <div className="rounded-2xl border border-gray-200 p-7">
+            <div className="rounded-2xl border border-gray-200 p-7 bg-white">
               <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Free Trial</p>
               <div className="flex items-end gap-1 mb-1">
                 <span className="text-4xl font-black text-gray-900">$0</span>
@@ -332,7 +332,7 @@ export default function Landing() {
             </div>
 
             {/* Monthly — featured */}
-            <div className="rounded-2xl border-2 border-orange-400 p-7 shadow-xl shadow-orange-100 relative">
+            <div className="rounded-2xl border-2 border-orange-400 p-7 shadow-xl shadow-orange-100 relative bg-white">
               <div className="absolute -top-4 left-1/2 -translate-x-1/2">
                 <Badge className="bg-orange-500 text-white border-none px-4 py-1 text-xs font-semibold shadow-md">
                   Most popular
@@ -358,7 +358,7 @@ export default function Landing() {
             </div>
 
             {/* Yearly */}
-            <div className="rounded-2xl border border-gray-200 p-7">
+            <div className="rounded-2xl border border-gray-200 p-7 bg-white">
               <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Yearly</p>
               <div className="flex items-end gap-1 mb-1">
                 <span className="text-4xl font-black text-gray-900">$295</span>

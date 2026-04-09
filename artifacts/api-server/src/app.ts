@@ -2,7 +2,6 @@ import express, { type Express } from "express";
 import { buildWidgetScript } from "./lib/widget-script";
 import cors from "cors";
 import path from "path";
-import fs from "fs";
 import pinoHttp from "pino-http";
 import session from "express-session";
 import connectPgSimple from "connect-pg-simple";
@@ -74,19 +73,11 @@ app.use("/api", router);
 
 // Serve the React frontend in production
 const frontendDist = path.resolve(__dirname, "../../souklick/dist/public");
-const frontendExists = fs.existsSync(frontendDist);
-logger.info({ frontendDist, frontendExists }, "Frontend static files check");
 
-if (frontendExists) {
-  app.use(express.static(frontendDist));
-  // SPA fallback — all non-API routes return index.html so React Router works
-  app.get("/*splat", (_req, res) => {
-    res.sendFile(path.join(frontendDist, "index.html"));
-  });
-} else {
-  app.get("/*splat", (_req, res) => {
-    res.status(503).send(`Frontend not found at: ${frontendDist}`);
-  });
-}
+app.use(express.static(frontendDist));
+// SPA fallback — all non-API routes return index.html so React Router works
+app.get("/*splat", (_req, res) => {
+  res.sendFile(path.join(frontendDist, "index.html"));
+});
 
 export default app;

@@ -68,7 +68,7 @@ export default function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
     )}>
       {/* Logo */}
       <div className="px-5 py-6 flex items-center justify-between gap-2.5">
-        <div className="flex items-center gap-2.5">
+        <Link href="/" className="flex items-center gap-2.5 hover:opacity-80 transition-opacity">
           <div className="w-7 h-7 rounded-lg flex items-center justify-center text-white font-bold text-sm"
             style={{ background: "linear-gradient(145deg, hsl(25,95%,62%), hsl(22,90%,48%))" }}>
             S
@@ -76,7 +76,7 @@ export default function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
           <span className="text-[15px] font-semibold tracking-tight text-sidebar-foreground">
             Souklick
           </span>
-        </div>
+        </Link>
         {/* Close button on mobile */}
         <button
           onClick={onMobileClose}

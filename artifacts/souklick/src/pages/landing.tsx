@@ -172,8 +172,9 @@ export default function Landing() {
           </Badge>
 
           <h1 className="text-4xl sm:text-5xl md:text-[58px] font-extrabold text-white leading-[1.1] tracking-tight mb-6">
-            All your customer reviews,{" "}
-            <span className="text-orange-400">one smart inbox.</span>
+            Turn your customer reviews into your biggest{" "}
+            <span className="text-orange-400">growth engine</span>{" "}
+            — all from one place.
           </h1>
 
           <p className="text-lg sm:text-xl text-gray-300 mb-4 max-w-2xl mx-auto leading-relaxed">
@@ -305,6 +306,7 @@ export default function Landing() {
           <div className="text-center mb-14">
             <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">Simple, honest pricing</h2>
             <p className="text-gray-500 text-lg">Start free. Upgrade when you're ready. Cancel anytime.</p>
+            <p className="text-gray-400 text-sm mt-2">Prices in USD · Payments accepted in all major currencies</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">

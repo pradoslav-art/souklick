@@ -32,31 +32,31 @@ export default function Settings({ tab = "profile" }: SettingsProps) {
 
       <Tabs value={tab} onValueChange={handleTabChange} className="w-full">
         <TabsList className="mb-8 w-full grid grid-cols-3 md:inline-flex md:w-auto h-auto p-1 bg-muted/50 border flex-wrap">
-          <TabsTrigger value="profile" className="py-2.5 px-2 sm:px-6 data-[state=active]:bg-background data-[state=active]:shadow-sm">
+          <TabsTrigger value="profile" className="py-2.5 px-2 sm:px-6 data-[state=active]:bg-card data-[state=active]:shadow-sm">
             <User className="w-4 h-4 mr-2 shrink-0 hidden sm:inline" />
             Profile
           </TabsTrigger>
-          <TabsTrigger value="brand-voice" className="py-2.5 px-2 sm:px-6 data-[state=active]:bg-background data-[state=active]:shadow-sm">
+          <TabsTrigger value="brand-voice" className="py-2.5 px-2 sm:px-6 data-[state=active]:bg-card data-[state=active]:shadow-sm">
             <MessageSquare className="w-4 h-4 mr-2 shrink-0 hidden sm:inline" />
             Brand Voice
           </TabsTrigger>
-          <TabsTrigger value="notifications" className="py-2.5 px-2 sm:px-6 data-[state=active]:bg-background data-[state=active]:shadow-sm">
+          <TabsTrigger value="notifications" className="py-2.5 px-2 sm:px-6 data-[state=active]:bg-card data-[state=active]:shadow-sm">
             <Bell className="w-4 h-4 mr-2 shrink-0 hidden sm:inline" />
             Notifications
           </TabsTrigger>
-          <TabsTrigger value="platforms" className="py-2.5 px-2 sm:px-6 data-[state=active]:bg-background data-[state=active]:shadow-sm">
+          <TabsTrigger value="platforms" className="py-2.5 px-2 sm:px-6 data-[state=active]:bg-card data-[state=active]:shadow-sm">
             <Zap className="w-4 h-4 mr-2 shrink-0 hidden sm:inline" />
             Platforms
           </TabsTrigger>
-          <TabsTrigger value="billing" className="py-2.5 px-2 sm:px-6 data-[state=active]:bg-background data-[state=active]:shadow-sm">
+          <TabsTrigger value="billing" className="py-2.5 px-2 sm:px-6 data-[state=active]:bg-card data-[state=active]:shadow-sm">
             <CreditCard className="w-4 h-4 mr-2 shrink-0 hidden sm:inline" />
             Billing
           </TabsTrigger>
-          <TabsTrigger value="team" className="py-2.5 px-2 sm:px-6 data-[state=active]:bg-background data-[state=active]:shadow-sm">
+          <TabsTrigger value="team" className="py-2.5 px-2 sm:px-6 data-[state=active]:bg-card data-[state=active]:shadow-sm">
             <Users className="w-4 h-4 mr-2 shrink-0 hidden sm:inline" />
             Team
           </TabsTrigger>
-          <TabsTrigger value="templates" className="py-2.5 px-2 sm:px-6 data-[state=active]:bg-background data-[state=active]:shadow-sm">
+          <TabsTrigger value="templates" className="py-2.5 px-2 sm:px-6 data-[state=active]:bg-card data-[state=active]:shadow-sm">
             <FileText className="w-4 h-4 mr-2 shrink-0 hidden sm:inline" />
             Templates
           </TabsTrigger>

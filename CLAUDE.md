@@ -187,6 +187,36 @@ _(Sessions 2026-03-31 through 2026-04-04 archived in CLAUDE_ARCHIVE.md)_
 
 ---
 
+### Session: 2026-04-09 (continued — bulk actions + overview + export)
+
+**What we did:**
+
+1. **Bulk response mode** — users can select multiple reviews on the dashboard and act on them all at once.
+   - `artifacts/api-server/src/routes/reviews.ts` — added `POST /api/reviews/bulk-skip` and `POST /api/reviews/bulk-respond` endpoints. Both verify org ownership via locationIds.
+   - `artifacts/souklick/src/components/review-card.tsx` — added `selected`, `onToggleSelect`, `selectMode` props. Checkbox appears in top-right corner when in select mode. Card click toggles selection in select mode; action buttons always open the modal.
+   - `artifacts/souklick/src/components/bulk-action-bar.tsx` (new) — floating bar at bottom of screen. Shows count badge, "Skip all" and "Apply response" buttons. "Apply response" expands a textarea. Template picker dropdown pre-fills text from saved templates.
+   - `artifacts/souklick/src/pages/dashboard.tsx` — "Select" button in header selects all visible reviews. `selectedIds` state + `toggleSelect` handler wired to ReviewCard. BulkActionBar renders when selection non-empty.
+
+2. **Response templates** — backend + Settings UI were already fully built. Added template picker to bulk-action-bar: fetches templates on mount, shows dropdown above the response textarea.
+
+3. **Multi-location overview page** (`/overview`) — all locations side by side with stats.
+   - `artifacts/api-server/src/routes/analytics.ts` — added `GET /api/analytics/locations` endpoint. Returns per-location: totalReviews, avgRating, responseRate, pendingReviews, reviewsLast30Days.
+   - `artifacts/souklick/src/pages/overview.tsx` (new) — org-wide summary strip (4 stat cards) + per-location cards with colour-coded response rate. Clicking a card navigates to that location's detail page.
+   - `artifacts/souklick/src/App.tsx` — added `/overview` route.
+   - `artifacts/souklick/src/components/layout/sidebar.tsx` — added "Overview" nav item with `LayoutGrid` icon between Locations and Analytics.
+
+4. **Export reviews as CSV** — download filtered reviews with one click.
+   - `artifacts/api-server/src/routes/reviews.ts` — added `GET /api/reviews/export`. Respects platform/locationId/rating/status query params. Returns dated CSV file (e.g. `reviews-2026-04-09.csv`).
+   - `artifacts/souklick/src/pages/dashboard.tsx` — "Export CSV" button appears when reviews exist. Passes active filters to the export URL. Uses `window.location.href` to trigger browser download.
+
+5. **www.souklick.com** — user set up a URL redirect in Namecheap (Type: URL Redirect, Host: www → https://souklick.com, 301 permanent). DNS propagation in progress at end of session.
+
+**No corrections from user this session.**
+
+**Nothing pending. App is feature-complete for current backlog.**
+
+---
+
 ### Session: 2026-04-08 (continued — deployment + domain)
 
 **What we did:**

@@ -361,7 +361,7 @@ export default function LocationDetail({ locationId }: LocationDetailProps) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Location Name</FormLabel>
-                    <FormControl><Input placeholder="e.g. Saffron Kitchen Downtown" {...field} /></FormControl>
+                    <FormControl><Input placeholder="e.g. Downtown Branch" {...field} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )}

@@ -237,7 +237,7 @@ export default function Onboarding() {
                           <FormItem>
                             <FormLabel className="text-base">Location Name</FormLabel>
                             <FormControl>
-                              <Input placeholder="e.g. Saffron Kitchen Downtown" className="text-lg py-6" {...field} />
+                              <Input placeholder="e.g. Downtown Branch" className="text-lg py-6" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>

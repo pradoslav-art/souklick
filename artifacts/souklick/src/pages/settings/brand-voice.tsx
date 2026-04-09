@@ -207,7 +207,7 @@ export default function BrandVoiceSettings() {
                     Text appended to the end of every AI-generated response.
                   </FormDescription>
                   <FormControl>
-                    <Input placeholder="e.g. The Saffron Kitchen Management Team" {...field} />
+                    <Input placeholder="e.g. The Acme Team" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -231,13 +231,13 @@ export default function BrandVoiceSettings() {
         <div className="space-y-6">
           <div className="bg-card border border-border rounded-lg p-4 shadow-sm text-sm">
             <p className="text-muted-foreground mb-2 text-xs font-semibold uppercase tracking-wider">Example Review (5 Star)</p>
-            <p className="italic mb-3">"Amazing food and the service from Ahmed was exceptional! Will definitely be coming back."</p>
+            <p className="italic mb-3">"Excellent service from Ahmed — incredibly helpful and professional. Will definitely be coming back."</p>
             <Separator className="my-3" />
             <p className="text-primary text-xs font-semibold uppercase tracking-wider mb-2">AI Draft Preview</p>
             <p className="text-foreground leading-relaxed">
-              {formality === "casual" && "Hi Sarah! Thanks so much for the 5 stars. We're thrilled you loved the food and we'll be sure to pass your kind words on to Ahmed. Can't wait to see you again!"}
-              {formality === "balanced" && "Dear Sarah, thank you for your wonderful 5-star review. We are delighted to hear that you enjoyed the food and that Ahmed provided exceptional service. We look forward to welcoming you back soon."}
-              {formality === "professional" && "Dear Guest, thank you for taking the time to leave a 5-star rating. We are pleased that your dining experience met expectations and that our staff member Ahmed provided commendable service. We anticipate your return."}
+              {formality === "casual" && "Hi Sarah! Thanks so much for the 5 stars. We're thrilled Ahmed made such a great impression — we'll be sure to pass your kind words on to him. Can't wait to see you again!"}
+              {formality === "balanced" && "Dear Sarah, thank you for your wonderful 5-star review. We are delighted to hear that Ahmed provided such excellent service. We look forward to welcoming you back soon."}
+              {formality === "professional" && "Dear Guest, thank you for taking the time to leave a 5-star rating. We are pleased that your experience met expectations and that our team member Ahmed provided commendable service. We anticipate your return."}
             </p>
             {form.watch("brandVoiceSignoff") && (
               <p className="text-foreground leading-relaxed mt-2 font-medium">

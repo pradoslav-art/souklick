@@ -7,7 +7,7 @@ import { logger } from "../lib/logger";
 
 const router: IRouter = Router();
 
-export const VALID_TAGS = ["food", "service", "wait time", "ambiance", "value", "cleanliness", "staff", "delivery"] as const;
+export const VALID_TAGS = ["service", "value", "cleanliness", "staff", "wait time", "quality", "communication", "delivery"] as const;
 export type ReviewTag = typeof VALID_TAGS[number];
 
 export async function tagReview(reviewId: string, reviewText: string): Promise<void> {
@@ -19,13 +19,13 @@ export async function tagReview(reviewId: string, reviewText: string): Promise<v
       max_tokens: 100,
       messages: [{
         role: "user",
-        content: `Classify this restaurant review into relevant topic tags.
+        content: `Classify this business review into relevant topic tags.
 
 Available tags: ${VALID_TAGS.join(", ")}
 
 Review: "${reviewText}"
 
-Return ONLY a JSON array of matching tags (e.g. ["food", "service"]). Return [] if nothing clearly applies. No explanation.`,
+Return ONLY a JSON array of matching tags (e.g. ["service", "value"]). Return [] if nothing clearly applies. No explanation.`,
       }],
     });
 
@@ -88,7 +88,7 @@ router.post("/ai/generate-response", requireAuth, async (req, res): Promise<void
     ? `\n\nHere are examples of our brand's response style:\n${examples.map((e, i) => `Example ${i + 1}: "${e}"`).join("\n")}`
     : "";
 
-  const prompt = `You are writing a review response for "${location.name}" restaurant/business.
+  const prompt = `You are writing a review response for "${location.name}".
 
 Review details:
 - Rating: ${review.rating}/5 stars

@@ -186,13 +186,13 @@ export default function Dashboard() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Topics</SelectItem>
-              <SelectItem value="food">Food</SelectItem>
               <SelectItem value="service">Service</SelectItem>
-              <SelectItem value="wait time">Wait Time</SelectItem>
-              <SelectItem value="ambiance">Ambiance</SelectItem>
               <SelectItem value="value">Value</SelectItem>
               <SelectItem value="cleanliness">Cleanliness</SelectItem>
               <SelectItem value="staff">Staff</SelectItem>
+              <SelectItem value="wait time">Wait Time</SelectItem>
+              <SelectItem value="quality">Quality</SelectItem>
+              <SelectItem value="communication">Communication</SelectItem>
               <SelectItem value="delivery">Delivery</SelectItem>
             </SelectContent>
           </Select>

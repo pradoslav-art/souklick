@@ -222,7 +222,7 @@ export default function Locations() {
           <Building className="w-12 h-12 text-muted-foreground/50 mb-4" />
           <h3 className="text-lg font-semibold mb-2">No locations yet</h3>
           <p className="text-muted-foreground max-w-md mb-6">
-            Add your first restaurant location to start managing its reviews and reputation.
+            Add your first location to start managing its reviews and reputation.
           </p>
           <Button onClick={() => setIsModalOpen(true)}>Add First Location</Button>
         </div>
@@ -323,7 +323,7 @@ export default function Locations() {
           <DialogHeader>
             <DialogTitle>Add New Location</DialogTitle>
             <DialogDescription>
-              Add a new restaurant location to track its reviews.
+              Add a new location to track its reviews.
             </DialogDescription>
           </DialogHeader>
           <Form {...form}>
@@ -335,7 +335,7 @@ export default function Locations() {
                   <FormItem>
                     <FormLabel>Location Name</FormLabel>
                     <FormControl>
-                      <Input placeholder="e.g. Saffron Kitchen Downtown" {...field} />
+                      <Input placeholder="e.g. Downtown Branch" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

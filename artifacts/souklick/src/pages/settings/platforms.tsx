@@ -26,7 +26,7 @@ const PLATFORMS = [
     field: "zomatoRestaurantId" as const,
     idLabel: "Zomato Restaurant ID",
     idExample: "18308870",
-    howToFind: "Open your restaurant's Zomato page. The Restaurant ID is the number in the URL — e.g. zomato.com/dubai/your-restaurant-18308870.",
+    howToFind: "Open your business's Zomato page. The Restaurant ID is the number in the URL — e.g. zomato.com/dubai/your-business-18308870.",
     docsUrl: "https://www.zomato.com",
   },
   {
@@ -38,7 +38,7 @@ const PLATFORMS = [
     field: "tripadvisorLocationId" as const,
     idLabel: "TripAdvisor Location ID",
     idExample: "d12345678",
-    howToFind: "Go to your restaurant on TripAdvisor. The Location ID is in the URL — e.g. tripadvisor.com/Restaurant_Review-gXXX-dYYYYYYYY — the number after '-d' is your ID.",
+    howToFind: "Go to your business on TripAdvisor. The Location ID is in the URL — e.g. tripadvisor.com/Attraction_Review-gXXX-dYYYYYYYY — the number after '-d' is your ID.",
     docsUrl: "https://www.tripadvisor.com",
   },
 ];

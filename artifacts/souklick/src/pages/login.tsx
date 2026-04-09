@@ -125,7 +125,7 @@ export default function Login() {
             </div>
             <div>
               <p className="text-sm font-semibold text-white">Amir K.</p>
-              <p className="text-xs text-white/60">Operations Director, Saffron Kitchen</p>
+              <p className="text-xs text-white/60">Operations Director, City Clinic Group</p>
             </div>
           </div>
         </div>
@@ -232,9 +232,9 @@ export default function Login() {
                     name="organizationName"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-[13px] font-medium text-foreground/80">Restaurant Group Name</FormLabel>
+                        <FormLabel className="text-[13px] font-medium text-foreground/80">Business Name</FormLabel>
                         <FormControl>
-                          <Input placeholder="Saffron Kitchen LLC" className="h-11 rounded-xl bg-card border-border/70 focus-visible:ring-primary/40 text-[14px]" {...field} />
+                          <Input placeholder="Acme Business Ltd" className="h-11 rounded-xl bg-card border-border/70 focus-visible:ring-primary/40 text-[14px]" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>

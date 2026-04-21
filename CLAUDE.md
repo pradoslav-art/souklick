@@ -414,3 +414,39 @@ _(Sessions 2026-03-31 through 2026-04-04 archived in CLAUDE_ARCHIVE.md)_
 - WhatsApp requires the Twilio number to be a WhatsApp Business number (or Twilio sandbox for testing)
 
 **No corrections from user this session.**
+
+---
+
+### Session: 2026-04-21 — PWA (installable mobile app)
+
+**What we did:**
+
+1. **PWA — installable on mobile without App Store.**
+
+   Files created:
+   - `artifacts/souklick/public/manifest.json` — app name, icons, `theme_color: #f97316`, `display: standalone`, `start_url: /`
+   - `artifacts/souklick/public/sw.js` — service worker: network-first for HTML (fresh app shell), cache-first for static assets, API calls never intercepted
+   - `artifacts/souklick/public/icon-192.png`, `icon-512.png`, `apple-touch-icon.png` — PNG icons generated from existing `favicon.svg` using ImageMagick
+
+   Files modified:
+   - `artifacts/souklick/index.html` — added `<link rel="manifest">`, `<link rel="apple-touch-icon">`, `<meta name="theme-color">`, iOS standalone meta tags
+   - `artifacts/souklick/src/main.tsx` — registers service worker on load
+
+2. **In-app install banner** — browser install banners are unreliable; added our own.
+
+   Files created:
+   - `artifacts/souklick/src/components/install-banner.tsx`
+     - **Android/Chrome:** captures `beforeinstallprompt` event, shows orange "Install" button that triggers native install dialog
+     - **iOS/Safari:** detects iOS user agent, shows inline instruction: tap Share → Add to Home Screen
+     - Auto-hides if already installed (standalone mode check)
+     - Dismissible — stores flag in `localStorage` so it never reappears after dismiss
+
+   Files modified:
+   - `artifacts/souklick/src/components/layout/app-layout.tsx` — renders `<InstallBanner />` above page content
+
+**Notes for next session:**
+- PWA needs a fresh Replit deploy to take effect in production
+- After deploying, test on real Android (Chrome) and iPhone (Safari) to confirm install flow works
+- iOS `beforeinstallprompt` doesn't exist — the Share tap instruction is the only option on iPhone, this is a browser limitation not a bug
+
+**No corrections from user this session.**

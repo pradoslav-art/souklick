@@ -1,5 +1,6 @@
 import { useState } from "react";
 import Sidebar from "./sidebar";
+import InstallBanner from "@/components/install-banner";
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -43,6 +44,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
           </div>
         </div>
 
+        <InstallBanner />
         <div className="flex-1 overflow-y-auto overflow-x-hidden">
           {children}
         </div>

@@ -44,7 +44,10 @@
       "WebFetch(domain:nicejob.com)",
       "WebFetch(domain:get.nicejob.co)",
       "Bash(npm run *)",
-      "Bash(npx drizzle-kit *)"
+      "Bash(npx drizzle-kit *)",
+      "Bash(convert -background none -size 192x192 favicon.svg icon-192.png)",
+      "Bash(convert -background none -size 512x512 favicon.svg icon-512.png)",
+      "Bash(convert -background none -size 180x180 favicon.svg apple-touch-icon.png)"
     ]
   }
 }

@@ -14,6 +14,14 @@ const app: Express = express();
 
 app.set("trust proxy", 1);
 
+// Redirect www to non-www
+app.use((req, res, next) => {
+  if (req.hostname?.startsWith("www.")) {
+    return res.redirect(301, `https://${req.hostname.slice(4)}${req.originalUrl}`);
+  }
+  next();
+});
+
 app.use(
   pinoHttp({
     logger,

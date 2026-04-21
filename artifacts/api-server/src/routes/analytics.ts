@@ -270,4 +270,64 @@ router.get("/analytics/locations", requireAuth, async (req, res): Promise<void> 
   res.json(result);
 });
 
+router.get("/analytics/topics", requireAuth, async (req, res): Promise<void> => {
+  const orgLocations = await db
+    .select({ id: locationsTable.id })
+    .from(locationsTable)
+    .where(eq(locationsTable.organizationId, req.session.organizationId!));
+
+  if (orgLocations.length === 0) { res.json([]); return; }
+
+  const locationIds = orgLocations.map((l) => l.id);
+
+  // Total review count for percentage calculation
+  const [totalRow] = await db
+    .select({ total: count(reviewsTable.id) })
+    .from(reviewsTable)
+    .where(inArray(reviewsTable.locationId, locationIds));
+  const total = Number(totalRow?.total ?? 0);
+  if (total === 0) { res.json([]); return; }
+
+  // Negative reviews count (1–3 stars) for "% of negative reviews" insight
+  const [negRow] = await db
+    .select({ total: count(reviewsTable.id) })
+    .from(reviewsTable)
+    .where(and(inArray(reviewsTable.locationId, locationIds), lte(reviewsTable.rating, 3)));
+  const totalNegative = Number(negRow?.total ?? 0);
+
+  // Unnest tags and aggregate per tag
+  const tagStats = await db.execute(sql`
+    SELECT
+      tag,
+      COUNT(*)::int                                                         AS mentions,
+      ROUND(AVG(r.rating)::numeric, 1)                                     AS avg_rating,
+      COUNT(*) FILTER (WHERE r.rating >= 4)::int                           AS positive_count,
+      COUNT(*) FILTER (WHERE r.rating <= 3)::int                           AS negative_count
+    FROM ${reviewsTable} r,
+         LATERAL UNNEST(r.tags) AS tag
+    WHERE r.location_id = ANY(${locationIds})
+      AND r.tags IS NOT NULL
+    GROUP BY tag
+    ORDER BY mentions DESC
+  `);
+
+  const rows = tagStats.rows as Array<{
+    tag: string;
+    mentions: number;
+    avg_rating: string;
+    positive_count: number;
+    negative_count: number;
+  }>;
+
+  res.json(rows.map((r) => ({
+    tag: r.tag,
+    mentions: Number(r.mentions),
+    avgRating: Number(r.avg_rating),
+    percentOfAll: total > 0 ? Math.round((Number(r.mentions) / total) * 100) : 0,
+    percentOfNegative: totalNegative > 0 ? Math.round((Number(r.negative_count) / totalNegative) * 100) : 0,
+    positiveCount: Number(r.positive_count),
+    negativeCount: Number(r.negative_count),
+  })));
+});
+
 export default router;

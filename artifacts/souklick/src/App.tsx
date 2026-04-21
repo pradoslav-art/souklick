@@ -25,6 +25,7 @@ const ForgotPassword = lazy(() => import("@/pages/forgot-password"));
 const ResetPassword = lazy(() => import("@/pages/reset-password"));
 const AcceptInvite = lazy(() => import("@/pages/accept-invite"));
 const NotFound = lazy(() => import("@/pages/not-found"));
+const FeedbackFunnel = lazy(() => import("@/pages/feedback"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -110,6 +111,7 @@ function Router() {
         <Route path="/forgot-password" component={ForgotPassword} />
         <Route path="/reset-password" component={ResetPassword} />
         <Route path="/accept-invite" component={AcceptInvite} />
+        <Route path="/feedback/:token" component={FeedbackFunnel} />
 
         {/* Public landing page */}
         <Route path="/" component={Landing} />

@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
-import { ArrowLeft, MapPin, Star, MessageSquare, Pencil, Loader2, X, Send, QrCode } from "lucide-react";
+import { ArrowLeft, MapPin, Star, MessageSquare, Pencil, Loader2, X, Send, QrCode, ShieldAlert, Users } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -42,6 +43,7 @@ import ReviewCard from "@/components/review-card";
 import CompetitorsSection from "@/components/competitors-section";
 import QrCodeModal from "@/components/qr-code-modal";
 import WidgetEmbed from "@/components/widget-embed";
+import BulkRequestModal from "@/components/bulk-request-modal";
 
 const editSchema = z.object({
   name: z.string().min(2, "Name is required"),
@@ -53,9 +55,52 @@ const editSchema = z.object({
 
 const requestSchema = z.object({
   customerName: z.string().min(2, "Name is required"),
-  customerEmail: z.string().email("Valid email required"),
+  customerEmail: z.string().optional(),
+  customerPhone: z.string().optional(),
   platform: z.string().min(1, "Select a platform"),
+  sendVia: z.enum(["email", "sms", "both"]),
 });
+
+const STAR_MAP: Record<number, string> = { 1: "★☆☆☆☆", 2: "★★☆☆☆", 3: "★★★☆☆", 4: "★★★★☆", 5: "★★★★★" };
+
+function PrivateFeedbackSection({ locationId }: { locationId: string }) {
+  const { data, isLoading } = useQuery<any[]>({
+    queryKey: ["private-feedback", locationId],
+    queryFn: async () => {
+      const res = await fetch(`/api/private-feedback?locationId=${locationId}`, { credentials: "include" });
+      if (!res.ok) return [];
+      return res.json();
+    },
+  });
+
+  if (isLoading || !data || data.length === 0) return null;
+
+  return (
+    <div className="bg-card border border-border rounded-xl shadow-md overflow-hidden mb-8">
+      <div className="px-6 py-4 border-b border-border flex items-center gap-2">
+        <ShieldAlert className="w-4 h-4 text-red-500" />
+        <h2 className="font-semibold text-sm">Private Feedback</h2>
+        <span className="ml-auto text-xs text-muted-foreground">{data.length} item{data.length !== 1 ? "s" : ""} — not posted publicly</span>
+      </div>
+      <div className="divide-y divide-border">
+        {data.map((item: any) => (
+          <div key={item.id} className="px-6 py-4">
+            <div className="flex items-center justify-between mb-1">
+              <span className="font-medium text-sm">{item.customerName}</span>
+              <span className="text-sm">{STAR_MAP[item.rating] ?? item.rating}</span>
+            </div>
+            {item.feedbackText && (
+              <p className="text-sm text-muted-foreground italic">"{item.feedbackText}"</p>
+            )}
+            <p className="text-xs text-muted-foreground mt-1">
+              {new Date(item.submittedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+            </p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 interface LocationDetailProps {
   locationId: string;
@@ -66,6 +111,7 @@ export default function LocationDetail({ locationId }: LocationDetailProps) {
   const queryClient = useQueryClient();
   const [editOpen, setEditOpen] = useState(false);
   const [requestOpen, setRequestOpen] = useState(false);
+  const [bulkOpen, setBulkOpen] = useState(false);
   const [sendingRequest, setSendingRequest] = useState(false);
   const [qrOpen, setQrOpen] = useState(false);
   const [platform, setPlatform] = useState("all");
@@ -100,10 +146,20 @@ export default function LocationDetail({ locationId }: LocationDetailProps) {
 
   const requestForm = useForm<z.infer<typeof requestSchema>>({
     resolver: zodResolver(requestSchema),
-    defaultValues: { customerName: "", customerEmail: "", platform: "" },
+    defaultValues: { customerName: "", customerEmail: "", customerPhone: "", platform: "", sendVia: "email" },
   });
 
+  const sendVia = requestForm.watch("sendVia");
+
   const onSendRequest = async (data: z.infer<typeof requestSchema>) => {
+    if ((data.sendVia === "email" || data.sendVia === "both") && !data.customerEmail) {
+      requestForm.setError("customerEmail", { message: "Email is required" });
+      return;
+    }
+    if ((data.sendVia === "sms" || data.sendVia === "both") && !data.customerPhone) {
+      requestForm.setError("customerPhone", { message: "Phone number is required" });
+      return;
+    }
     setSendingRequest(true);
     try {
       const res = await fetch("/api/review-requests", {
@@ -116,7 +172,9 @@ export default function LocationDetail({ locationId }: LocationDetailProps) {
         const err = await res.json().catch(() => ({}));
         throw new Error(err.error ?? "Failed to send");
       }
-      toast({ title: "Request sent!", description: `Email sent to ${data.customerEmail}.`, className: "bg-green-50 border-green-200" });
+      localStorage.setItem("souklick_review_request_sent", "true");
+      const sentViaLabel = data.sendVia === "both" ? "email and SMS" : data.sendVia === "sms" ? "SMS" : "email";
+      toast({ title: "Request sent!", description: `Sent to ${data.customerName} via ${sentViaLabel}.`, className: "bg-green-50 border-green-200" });
       requestForm.reset();
       setRequestOpen(false);
     } catch (err: any) {
@@ -200,6 +258,9 @@ export default function LocationDetail({ locationId }: LocationDetailProps) {
               )}
               <Button size="sm" className="gap-1.5" onClick={() => setRequestOpen(true)}>
                 <Send className="w-3.5 h-3.5" /> Request Review
+              </Button>
+              <Button size="sm" variant="outline" className="gap-1.5" onClick={() => setBulkOpen(true)}>
+                <Users className="w-3.5 h-3.5" /> Bulk
               </Button>
             </div>
           </div>
@@ -333,6 +394,9 @@ export default function LocationDetail({ locationId }: LocationDetailProps) {
         )}
       </div>
 
+      {/* Private feedback */}
+      <PrivateFeedbackSection locationId={locationId} />
+
       {/* Competitors */}
       {location && (
         <CompetitorsSection
@@ -432,6 +496,14 @@ export default function LocationDetail({ locationId }: LocationDetailProps) {
         />
       )}
 
+      {/* Bulk request modal */}
+      <BulkRequestModal
+        open={bulkOpen}
+        onOpenChange={setBulkOpen}
+        locationId={locationId}
+        location={location}
+      />
+
       {/* Request Review dialog */}
       <Dialog open={requestOpen} onOpenChange={(open) => { setRequestOpen(open); if (!open) requestForm.reset(); }}>
         <DialogContent className="sm:max-w-[420px]">
@@ -439,10 +511,40 @@ export default function LocationDetail({ locationId }: LocationDetailProps) {
             <DialogTitle>Request a review</DialogTitle>
           </DialogHeader>
           <p className="text-sm text-muted-foreground -mt-1">
-            Enter the customer's details and we'll email them a direct link to leave a review.
+            Send the customer a link to rate their experience — happy customers go straight to the review platform.
           </p>
           <Form {...requestForm}>
             <form onSubmit={requestForm.handleSubmit(onSendRequest)} className="space-y-4 pt-1">
+
+              {/* Send via toggle */}
+              <FormField
+                control={requestForm.control}
+                name="sendVia"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Send via</FormLabel>
+                    <FormControl>
+                      <div className="flex rounded-lg border border-border overflow-hidden">
+                        {(["email", "sms", "both"] as const).map((opt) => (
+                          <button
+                            key={opt}
+                            type="button"
+                            onClick={() => field.onChange(opt)}
+                            className={`flex-1 py-2 text-sm font-medium transition-colors ${
+                              field.value === opt
+                                ? "bg-primary text-primary-foreground"
+                                : "bg-background text-muted-foreground hover:bg-muted"
+                            }`}
+                          >
+                            {opt === "both" ? "Both" : opt.toUpperCase()}
+                          </button>
+                        ))}
+                      </div>
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+
               <FormField
                 control={requestForm.control}
                 name="customerName"
@@ -454,17 +556,35 @@ export default function LocationDetail({ locationId }: LocationDetailProps) {
                   </FormItem>
                 )}
               />
-              <FormField
-                control={requestForm.control}
-                name="customerEmail"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Customer Email</FormLabel>
-                    <FormControl><Input type="email" placeholder="customer@example.com" {...field} /></FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+
+              {(sendVia === "email" || sendVia === "both") && (
+                <FormField
+                  control={requestForm.control}
+                  name="customerEmail"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Customer Email</FormLabel>
+                      <FormControl><Input type="email" placeholder="customer@example.com" {...field} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+
+              {(sendVia === "sms" || sendVia === "both") && (
+                <FormField
+                  control={requestForm.control}
+                  name="customerPhone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Customer Phone</FormLabel>
+                      <FormControl><Input type="tel" placeholder="+44 7700 900000" {...field} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+
               <FormField
                 control={requestForm.control}
                 name="platform"
@@ -487,6 +607,7 @@ export default function LocationDetail({ locationId }: LocationDetailProps) {
                   </FormItem>
                 )}
               />
+
               <div className="flex justify-end gap-2 pt-2">
                 <Button type="button" variant="outline" onClick={() => setRequestOpen(false)}>Cancel</Button>
                 <Button type="submit" disabled={sendingRequest} className="gap-2">

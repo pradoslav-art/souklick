@@ -35,7 +35,16 @@
       "Bash(grep:*)",
       "Bash(ls artifacts/api-server/src/routes/*.ts)",
       "Bash(xargs -I {} basename {})",
-      "Bash(ls artifacts/souklick/src/components/*.tsx)"
+      "Bash(ls artifacts/souklick/src/components/*.tsx)",
+      "WebSearch",
+      "WebFetch(domain:www.podium.com)",
+      "WebFetch(domain:birdeye.com)",
+      "WebFetch(domain:reputation.com)",
+      "WebFetch(domain:www.reviewtrackers.com)",
+      "WebFetch(domain:nicejob.com)",
+      "WebFetch(domain:get.nicejob.co)",
+      "Bash(npm run *)",
+      "Bash(npx drizzle-kit *)"
     ]
   }
 }

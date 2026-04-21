@@ -259,6 +259,7 @@ router.get("/admin/users", requireAdmin, async (_req, res): Promise<void> => {
       email: usersTable.email,
       role: usersTable.role,
       createdAt: usersTable.createdAt,
+      orgId: organizationsTable.id,
       orgName: organizationsTable.name,
       subscriptionPlan: organizationsTable.subscriptionPlan,
       subscriptionStatus: organizationsTable.subscriptionStatus,
@@ -269,6 +270,22 @@ router.get("/admin/users", requireAdmin, async (_req, res): Promise<void> => {
     .orderBy(desc(usersTable.createdAt));
 
   res.json(rows);
+});
+
+// ─── PATCH /api/admin/orgs/:orgId/plan ────────────────────────────────────
+router.patch("/admin/orgs/:orgId/plan", requireAdmin, async (req, res): Promise<void> => {
+  const orgId = String(req.params.orgId);
+  const { plan } = req.body as { plan: string };
+  const allowed = ["trial", "starter", "growth", "enterprise", "monthly", "yearly"];
+  if (!allowed.includes(plan)) {
+    res.status(400).json({ error: "Invalid plan" });
+    return;
+  }
+  await db
+    .update(organizationsTable)
+    .set({ subscriptionPlan: plan as any, trialEndsAt: null })
+    .where(eq(organizationsTable.id, orgId));
+  res.json({ ok: true });
 });
 
 // ─── GET /api/admin/export/users ──────────────────────────────────────────

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { Link } from "wouter";
-import { Bell, MessageSquare, Zap, CreditCard, User, Users, FileText } from "lucide-react";
+import { Bell, MessageSquare, Zap, CreditCard, User, Users, FileText, Bot } from "lucide-react";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import BrandVoiceSettings from "./settings/brand-voice";
@@ -11,6 +11,7 @@ import ProfileSettings from "./settings/profile";
 import PlatformSettings from "./settings/platforms";
 import TeamSettings from "./settings/team";
 import TemplatesSettings from "./settings/templates";
+import AutoResponsesSettings from "./settings/auto-responses";
 
 interface SettingsProps {
   tab?: string;
@@ -60,6 +61,10 @@ export default function Settings({ tab = "profile" }: SettingsProps) {
             <FileText className="w-4 h-4 mr-2 shrink-0 hidden sm:inline" />
             Templates
           </TabsTrigger>
+          <TabsTrigger value="auto-responses" className="py-2.5 px-2 sm:px-6 data-[state=active]:bg-card data-[state=active]:shadow-sm">
+            <Bot className="w-4 h-4 mr-2 shrink-0 hidden sm:inline" />
+            Auto-Responses
+          </TabsTrigger>
         </TabsList>
 
         <div className="bg-card border border-border rounded-xl shadow-md overflow-hidden">
@@ -83,6 +88,9 @@ export default function Settings({ tab = "profile" }: SettingsProps) {
           </TabsContent>
           <TabsContent value="templates" className="m-0 p-0 outline-none">
             <TemplatesSettings />
+          </TabsContent>
+          <TabsContent value="auto-responses" className="m-0 p-0 outline-none">
+            <AutoResponsesSettings />
           </TabsContent>
         </div>
       </Tabs>

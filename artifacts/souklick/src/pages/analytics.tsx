@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
 import {
   useGetAnalyticsSummary,
@@ -8,7 +9,7 @@ import {
   getGetRatingTrendQueryKey,
   getGetPlatformBreakdownQueryKey
 } from "@workspace/api-client-react";
-import { MessageSquare, Star, Reply, Clock, MapPin } from "lucide-react";
+import { MessageSquare, Star, Reply, Clock, MapPin, Hash } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -39,6 +40,23 @@ export default function Analytics() {
 
   const { data: platformData, isLoading: loadingPlatform } = useGetPlatformBreakdown({
     query: { queryKey: getGetPlatformBreakdownQueryKey() }
+  });
+
+  const { data: topicsData } = useQuery<Array<{
+    tag: string;
+    mentions: number;
+    avgRating: number;
+    percentOfAll: number;
+    percentOfNegative: number;
+    positiveCount: number;
+    negativeCount: number;
+  }>>({
+    queryKey: ["analytics-topics"],
+    queryFn: async () => {
+      const res = await fetch("/api/analytics/topics", { credentials: "include" });
+      if (!res.ok) return [];
+      return res.json();
+    },
   });
 
   const isLoading = loadingSummary || loadingTrend || loadingPlatform;
@@ -280,6 +298,70 @@ export default function Analytics() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Topic insights */}
+      {topicsData && topicsData.length > 0 && (
+        <Card className="shadow-sm border-border mt-8">
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Hash className="w-4 h-4 text-muted-foreground" />
+              <CardTitle>Topic Insights</CardTitle>
+            </div>
+            <CardDescription>What your customers mention most — and whether they're saying it positively or negatively</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {topicsData.map((topic) => {
+                const isNegativeLed = topic.negativeCount > topic.positiveCount;
+                const barColor = topic.avgRating >= 4 ? "bg-green-500" : topic.avgRating >= 3 ? "bg-amber-400" : "bg-red-500";
+                const ratingColor = topic.avgRating >= 4 ? "text-green-600" : topic.avgRating >= 3 ? "text-amber-600" : "text-red-600";
+                const positivePct = topic.mentions > 0 ? Math.round((topic.positiveCount / topic.mentions) * 100) : 0;
+                const negativePct = 100 - positivePct;
+
+                return (
+                  <div key={topic.tag} className="border border-border rounded-xl p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="font-semibold capitalize text-sm">{topic.tag}</span>
+                      <div className="flex items-center gap-2">
+                        <span className={`text-sm font-bold ${ratingColor}`}>{topic.avgRating.toFixed(1)} ★</span>
+                        <span className="text-xs text-muted-foreground">{topic.mentions} mention{topic.mentions !== 1 ? "s" : ""}</span>
+                      </div>
+                    </div>
+
+                    {/* Positive/negative stacked bar */}
+                    <div className="h-2 rounded-full bg-muted overflow-hidden flex mb-2">
+                      <div className="bg-green-400 h-full transition-all" style={{ width: `${positivePct}%` }} />
+                      <div className="bg-red-400 h-full transition-all" style={{ width: `${negativePct}%` }} />
+                    </div>
+
+                    <div className="flex justify-between text-xs text-muted-foreground mb-2">
+                      <span className="text-green-600">{positivePct}% positive</span>
+                      <span className="text-red-500">{negativePct}% negative</span>
+                    </div>
+
+                    {/* Key insight */}
+                    {isNegativeLed && topic.percentOfNegative > 0 ? (
+                      <p className="text-xs text-red-600 bg-red-50 rounded-md px-2.5 py-1.5">
+                        ⚠ {topic.percentOfNegative}% of your negative reviews mention {topic.tag}
+                      </p>
+                    ) : topic.percentOfAll > 0 ? (
+                      <p className="text-xs text-muted-foreground">
+                        Appears in {topic.percentOfAll}% of all reviews
+                      </p>
+                    ) : null}
+                  </div>
+                );
+              })}
+            </div>
+
+            {topicsData.every((t) => t.mentions === 0) && (
+              <p className="text-sm text-muted-foreground text-center py-6">
+                No tagged reviews yet. Tags are applied automatically as new reviews come in.
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

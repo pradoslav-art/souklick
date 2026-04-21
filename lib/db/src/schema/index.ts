@@ -6,3 +6,5 @@ export * from "./responses";
 export * from "./review-requests";
 export * from "./response-templates";
 export * from "./competitors";
+export * from "./private-feedback";
+export * from "./auto-response-rules";

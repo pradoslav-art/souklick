@@ -1,6 +1,7 @@
 import { Router, type IRouter } from "express";
 import { eq, and, lte, gte, desc, asc, sql, count, inArray } from "drizzle-orm";
-import { db, reviewsTable, locationsTable, responsesTable, usersTable } from "@workspace/db";
+import { db, reviewsTable, locationsTable, responsesTable, usersTable, autoResponseRulesTable } from "@workspace/db";
+import { or, isNull } from "drizzle-orm";
 import { requireAuth } from "../middlewares/auth";
 import { sendReviewAlerts } from "../lib/email";
 import { sendSmsAlert, sendWhatsAppAlert } from "../lib/sms";
@@ -221,6 +222,9 @@ router.post("/reviews", requireAuth, async (req, res): Promise<void> => {
     tagReview(review.id, reviewText).catch(() => {});
   }
 
+  // Apply auto-response rules (non-blocking)
+  applyAutoResponseRules(review.id, location.organizationId, locationId, platform, ratingNum).catch(() => {});
+
   res.status(201).json(formatReview(review, location.name));
 });
 
@@ -415,5 +419,45 @@ router.patch("/reviews/:id", requireAuth, async (req, res): Promise<void> => {
 
   res.json(formatReview(updated, location.name));
 });
+
+async function applyAutoResponseRules(
+  reviewId: string,
+  organizationId: string,
+  locationId: string,
+  platform: string,
+  rating: number
+): Promise<void> {
+  const rules = await db
+    .select()
+    .from(autoResponseRulesTable)
+    .where(
+      and(
+        eq(autoResponseRulesTable.organizationId, organizationId),
+        eq(autoResponseRulesTable.isActive, true),
+        lte(autoResponseRulesTable.minRating, rating),
+        gte(autoResponseRulesTable.maxRating, rating),
+        or(isNull(autoResponseRulesTable.locationId), eq(autoResponseRulesTable.locationId, locationId)),
+        or(isNull(autoResponseRulesTable.platform), eq(autoResponseRulesTable.platform, platform))
+      )
+    )
+    .limit(1);
+
+  if (rules.length === 0) return;
+
+  const rule = rules[0];
+
+  await db.insert(responsesTable).values({
+    reviewId,
+    draftedBy: null,
+    draftText: rule.responseText,
+    finalText: rule.responseText,
+    status: "posted",
+  });
+
+  await db
+    .update(reviewsTable)
+    .set({ responseStatus: "responded" })
+    .where(eq(reviewsTable.id, reviewId));
+}
 
 export default router;

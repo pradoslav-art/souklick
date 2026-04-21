@@ -24,6 +24,23 @@ export async function sendSmsAlert({
   await client.messages.create({ from: getFromNumber(), to, body: message });
 }
 
+export async function sendSmsReviewRequest({
+  to,
+  customerName,
+  locationName,
+  funnelUrl,
+}: {
+  to: string;
+  customerName: string;
+  locationName: string;
+  funnelUrl: string;
+}): Promise<void> {
+  const client = getClient();
+  const firstName = customerName.split(" ")[0];
+  const body = `Hi ${firstName}! The team at ${locationName} would love your feedback. It only takes a minute: ${funnelUrl}`;
+  await client.messages.create({ from: getFromNumber(), to, body });
+}
+
 export async function sendWhatsAppAlert({
   to,
   message,

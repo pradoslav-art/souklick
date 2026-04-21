@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useGetCurrentUser, getGetCurrentUserQueryKey } from "@workspace/api-client-react";
 import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid,
@@ -7,11 +7,13 @@ import {
 import {
   Users, Activity, TrendingUp, TrendingDown, AlertTriangle,
   CheckCircle, XCircle, Download, Star, Clock, Zap,
-  BarChart2, RefreshCw, ShieldAlert, Loader2,
+  BarChart2, RefreshCw, ShieldAlert, Loader2, Gift,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { format, formatDistanceToNow } from "date-fns";
+import { useState } from "react";
 
 // ── Data fetching ─────────────────────────────────────────────────────────
 
@@ -106,6 +108,24 @@ function StatusBadge({ status }: { status: string }) {
 // ── Main dashboard ────────────────────────────────────────────────────────
 
 export default function AdminDashboard() {
+  const queryClient = useQueryClient();
+  const [grantingOrgId, setGrantingOrgId] = useState<string | null>(null);
+
+  const grantFreeAccess = async (orgId: string) => {
+    setGrantingOrgId(orgId);
+    try {
+      await fetch(`/api/admin/orgs/${orgId}/plan`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plan: "yearly" }),
+        credentials: "include",
+      });
+      queryClient.invalidateQueries({ queryKey: ["admin-users"] });
+    } finally {
+      setGrantingOrgId(null);
+    }
+  };
+
   const { data: currentUser } = useGetCurrentUser({ query: { queryKey: getGetCurrentUserQueryKey() } });
 
   const { data: stats, error: statsError, isLoading: loadingStats, dataUpdatedAt } = useQuery({
@@ -608,7 +628,8 @@ export default function AdminDashboard() {
                       <th className="text-left pb-2 pr-4 font-medium">Organisation</th>
                       <th className="text-left pb-2 pr-4 font-medium">Plan</th>
                       <th className="text-left pb-2 pr-4 font-medium">Status</th>
-                      <th className="text-left pb-2 font-medium">Joined</th>
+                      <th className="text-left pb-2 pr-4 font-medium">Joined</th>
+                      <th className="text-left pb-2 font-medium"></th>
                     </tr>
                   </thead>
                   <tbody>
@@ -619,8 +640,28 @@ export default function AdminDashboard() {
                         <td className="py-2 pr-4 text-xs">{u.orgName ?? "—"}</td>
                         <td className="py-2 pr-4"><PlanBadge plan={u.subscriptionPlan ?? "trial"} /></td>
                         <td className="py-2 pr-4"><StatusBadge status={u.subscriptionStatus ?? "active"} /></td>
-                        <td className="py-2 text-xs text-muted-foreground">
+                        <td className="py-2 pr-4 text-xs text-muted-foreground">
                           {u.createdAt ? format(new Date(u.createdAt), "MMM d, yyyy") : "—"}
+                        </td>
+                        <td className="py-2">
+                          {u.orgId && u.subscriptionPlan !== "yearly" && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-6 text-xs px-2 gap-1 text-green-700 border-green-300 hover:bg-green-50"
+                              disabled={grantingOrgId === u.orgId}
+                              onClick={() => grantFreeAccess(u.orgId)}
+                            >
+                              {grantingOrgId === u.orgId
+                                ? <Loader2 className="w-3 h-3 animate-spin" />
+                                : <Gift className="w-3 h-3" />
+                              }
+                              Grant free
+                            </Button>
+                          )}
+                          {u.subscriptionPlan === "yearly" && (
+                            <span className="text-xs text-green-600 font-medium">Free access</span>
+                          )}
                         </td>
                       </tr>
                     ))}

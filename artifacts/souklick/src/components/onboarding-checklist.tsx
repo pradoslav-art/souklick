@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 const DISMISSED_KEY = "onboarding_checklist_dismissed";
 const COLLAPSED_KEY = "onboarding_checklist_collapsed";
 const AI_USED_KEY = "souklick_ai_used";
+const REVIEW_REQUEST_KEY = "souklick_review_request_sent";
 
 interface Step {
   id: string;
@@ -31,6 +32,7 @@ export default function OnboardingChecklist() {
   ) ?? false;
   const hasAlerts = !!(user as any)?.notificationEmail || !!(user as any)?.notificationPush;
   const hasUsedAI = localStorage.getItem(AI_USED_KEY) === "true";
+  const hasSentRequest = localStorage.getItem(REVIEW_REQUEST_KEY) === "true";
 
   const steps: Step[] = [
     {
@@ -50,9 +52,16 @@ export default function OnboardingChecklist() {
     {
       id: "platform",
       title: "Connect a review platform",
-      description: "Link Google, TripAdvisor, or Zomato to start pulling in reviews.",
-      href: "/settings/platforms",
+      description: "Go to a location and add your Google Place ID, TripAdvisor, or Zomato link.",
+      href: "/locations",
       done: hasPlatform,
+    },
+    {
+      id: "request",
+      title: "Send your first review request",
+      description: "Email a customer a direct link to leave you a review.",
+      href: "/locations",
+      done: hasSentRequest,
     },
     {
       id: "alerts",

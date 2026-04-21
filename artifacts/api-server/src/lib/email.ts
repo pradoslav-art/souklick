@@ -1,4 +1,6 @@
 import { Resend } from "resend";
+import { db, usersTable } from "@workspace/db";
+import { eq } from "drizzle-orm";
 
 function getResend() {
   const key = process.env.RESEND_API_KEY;
@@ -240,6 +242,81 @@ export async function sendTrialWarningEmail({ to, fullName, daysLeft }: { to: st
     from: fromAddress,
     to,
     subject: `Your Souklick trial ends in ${dayLabel} — upgrade to keep access`,
+    html,
+  });
+}
+
+export async function sendReminderEmail({
+  to,
+  customerName,
+  locationName,
+  platform,
+  reviewUrl,
+  reminderNumber,
+}: {
+  to: string;
+  customerName: string;
+  locationName: string;
+  platform: string;
+  reviewUrl: string;
+  reminderNumber: 1 | 2;
+}): Promise<void> {
+  const resend = getResend();
+  const fromAddress = process.env.EMAIL_FROM ?? "onboarding@resend.dev";
+  const firstName = customerName.split(" ")[0];
+  const platformLabel = PLATFORM_LABEL[platform] ?? platform;
+  const isLast = reminderNumber === 2;
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8" /></head>
+<body style="margin:0;padding:0;background:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f5;padding:32px 16px;">
+    <tr><td align="center">
+      <table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.08);">
+        <tr>
+          <td style="background:linear-gradient(135deg,#f97316,#ea580c);padding:24px 32px;">
+            <p style="margin:0;font-size:20px;font-weight:700;color:#ffffff;letter-spacing:-0.3px;">${locationName}</p>
+            <p style="margin:4px 0 0;font-size:13px;color:rgba(255,255,255,0.8);">${isLast ? "Last reminder" : "Quick follow-up"}</p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:28px 32px;">
+            <p style="margin:0 0 16px;font-size:22px;font-weight:700;color:#111827;">Hi ${firstName}</p>
+            <p style="margin:0 0 20px;font-size:15px;line-height:1.6;color:#374151;">
+              ${isLast
+                ? `This is our last reminder — we won't bother you again after this. If you have a spare moment, a review on ${platformLabel} would mean the world to the team at <strong>${locationName}</strong>.`
+                : `Just a quick follow-up from the team at <strong>${locationName}</strong>. We'd still love to hear about your experience — it only takes a minute!`
+              }
+            </p>
+            <a href="${reviewUrl}" style="display:inline-block;background:#f97316;color:#ffffff;text-decoration:none;font-size:14px;font-weight:600;padding:12px 24px;border-radius:8px;">
+              Leave a review on ${platformLabel} →
+            </a>
+            <p style="margin:24px 0 0;font-size:13px;color:#6b7280;">
+              Thank you for your support!
+            </p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:16px 32px 24px;border-top:1px solid #f3f4f6;">
+            <p style="margin:0;font-size:12px;color:#9ca3af;">
+              You received this because a team member at ${locationName} invited you to leave a review.
+            </p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+
+  await resend.emails.send({
+    from: fromAddress,
+    to,
+    subject: isLast
+      ? `Last reminder: How was your visit to ${locationName}?`
+      : `Quick reminder: share your experience at ${locationName}`,
     html,
   });
 }
@@ -536,6 +613,85 @@ export async function sendReviewAlerts(payload: ReviewAlertPayload): Promise<voi
   await Promise.all(
     payload.to.map((email) =>
       resend.emails.send({ from: fromAddress, to: email, subject, html })
+    )
+  );
+}
+
+export async function sendPrivateFeedbackAlertEmail({
+  organizationId,
+  locationName,
+  customerName,
+  rating,
+  feedbackText,
+}: {
+  organizationId: string;
+  locationName: string;
+  customerName: string;
+  rating: number;
+  feedbackText: string | null;
+}): Promise<void> {
+  const owners = await db
+    .select({ email: usersTable.email, fullName: usersTable.fullName })
+    .from(usersTable)
+    .where(eq(usersTable.organizationId, organizationId));
+
+  if (owners.length === 0) return;
+
+  const resend = getResend();
+  const fromAddress = process.env.EMAIL_FROM ?? "onboarding@resend.dev";
+  const stars = STAR_MAP[rating] ?? "★".repeat(rating);
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8" /></head>
+<body style="margin:0;padding:0;background:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f5;padding:32px 16px;">
+    <tr><td align="center">
+      <table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.08);">
+        <tr>
+          <td style="background:linear-gradient(135deg,#dc2626,#b91c1c);padding:24px 32px;">
+            <p style="margin:0;font-size:20px;font-weight:700;color:#ffffff;">${locationName}</p>
+            <p style="margin:4px 0 0;font-size:13px;color:rgba(255,255,255,0.85);">Private feedback received</p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:28px 32px;">
+            <p style="margin:0 0 8px;font-size:18px;font-weight:700;color:#111827;">A customer left private feedback</p>
+            <p style="margin:0 0 20px;font-size:14px;color:#6b7280;">This was not posted publicly — it was captured by your feedback funnel.</p>
+            <table cellpadding="0" cellspacing="0" style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:16px 20px;width:100%;margin-bottom:20px;">
+              <tr>
+                <td>
+                  <p style="margin:0 0 6px;font-size:13px;font-weight:600;color:#374151;">From: ${customerName}</p>
+                  <p style="margin:0 0 8px;font-size:22px;">${stars}</p>
+                  ${feedbackText ? `<p style="margin:0;font-size:14px;color:#374151;line-height:1.6;font-style:italic;">"${feedbackText}"</p>` : `<p style="margin:0;font-size:13px;color:#9ca3af;">No additional comments.</p>`}
+                </td>
+              </tr>
+            </table>
+            <p style="margin:0;font-size:13px;color:#6b7280;">
+              Consider reaching out to ${customerName} directly to resolve their concern before it becomes a public review.
+            </p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:16px 32px 24px;border-top:1px solid #f3f4f6;">
+            <p style="margin:0;font-size:12px;color:#9ca3af;">Sent by Souklick · Private feedback is never shared publicly.</p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+
+  await Promise.all(
+    owners.map((o) =>
+      resend.emails.send({
+        from: fromAddress,
+        to: o.email,
+        subject: `⚠️ Private feedback at ${locationName} — ${stars}`,
+        html,
+      })
     )
   );
 }

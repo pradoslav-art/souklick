@@ -170,22 +170,22 @@ export default function Onboarding() {
                   <div className="mb-8 text-center">
                     <h2 className="text-2xl font-bold mb-2">Where do your customers review you?</h2>
                     <p className="text-muted-foreground">
-                      Connect your review sources to pull them into your unified inbox.
+                      Tell us which platforms you use. You'll connect each one to your location in the next step.
                     </p>
                   </div>
 
-                  <div className="space-y-4 mb-8">
+                  <div className="space-y-4 mb-6">
                     {[
-                      { id: "google", name: "Google Business", icon: SiGoogle, color: "text-[#4285F4]" },
-                      { id: "zomato", name: "Zomato", icon: SiZomato, color: "text-[#E23744]" },
-                      { id: "tripadvisor", name: "TripAdvisor", icon: SiTripadvisor, color: "text-[#00AF87]" },
+                      { id: "google", name: "Google Business", icon: SiGoogle, color: "text-[#4285F4]", hint: "Add your Google Place ID per location" },
+                      { id: "zomato", name: "Zomato", icon: SiZomato, color: "text-[#E23744]", hint: "Add your Zomato restaurant link per location" },
+                      { id: "tripadvisor", name: "TripAdvisor", icon: SiTripadvisor, color: "text-[#00AF87]", hint: "Add your TripAdvisor location ID per location" },
                     ].map(platform => (
-                      <div 
+                      <div
                         key={platform.id}
                         onClick={() => togglePlatform(platform.id)}
                         className={`flex items-center justify-between p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                          connectedPlatforms.includes(platform.id) 
-                            ? "border-primary bg-primary/5" 
+                          connectedPlatforms.includes(platform.id)
+                            ? "border-primary bg-primary/5"
                             : "border-muted hover:border-border bg-card"
                         }`}
                       >
@@ -195,7 +195,7 @@ export default function Onboarding() {
                           </div>
                           <div>
                             <h3 className="font-bold">{platform.name}</h3>
-                            <p className="text-xs text-muted-foreground">Pull reviews & ratings</p>
+                            <p className="text-xs text-muted-foreground">{platform.hint}</p>
                           </div>
                         </div>
                         <div className={`w-6 h-6 rounded-full border flex items-center justify-center ${
@@ -208,6 +208,10 @@ export default function Onboarding() {
                       </div>
                     ))}
                   </div>
+
+                  <p className="text-xs text-muted-foreground text-center mb-6">
+                    You'll enter the actual IDs and links inside each location after setup.
+                  </p>
 
                   <div className="flex justify-end">
                     <Button onClick={handleNextStep} size="lg" className="gap-2">
